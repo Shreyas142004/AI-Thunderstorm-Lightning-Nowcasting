@@ -471,7 +471,14 @@ def build_full_feature_dict(
     cos_m = round(float(np.cos(2 * np.pi * month / 12.0)), 4)
 
     if precip_accum_3d is None:
-        precip_accum_3d = 0.0
+        if cloudcover <= 40.0:
+            precip_accum_3d = 0.0
+        elif cloudcover > 75.0 and humidity > 75.0:
+            precip_accum_3d = 15.0
+        elif cloudcover > 60.0 and humidity > 70.0:
+            precip_accum_3d = 5.0
+        else:
+            precip_accum_3d = 0.0
 
     precip_mm_lag1 = precip_accum_3d / 3.0 if precip_accum_3d > 0 else 0.0
 

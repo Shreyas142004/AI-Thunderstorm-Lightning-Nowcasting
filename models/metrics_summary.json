@@ -1,55 +1,55 @@
 [
   {
     "model_name": "Logistic Regression (Baseline)",
-    "accuracy": 0.8631,
-    "precision": 0.8257,
-    "recall": 0.9063,
-    "f1_score": 0.8641,
-    "roc_auc": 0.949,
+    "accuracy": 0.8836,
+    "precision": 0.8699,
+    "recall": 0.9025,
+    "f1_score": 0.8859,
+    "roc_auc": 0.9524,
     "confusion_matrix": [
       [
-        1406,
-        302
+        946,
+        148
       ],
       [
-        148,
-        1431
+        107,
+        990
       ]
     ]
   },
   {
     "model_name": "Random Forest Classifier",
-    "accuracy": 0.8354,
-    "precision": 0.806,
-    "recall": 0.8657,
-    "f1_score": 0.8348,
-    "roc_auc": 0.9196,
+    "accuracy": 0.8293,
+    "precision": 0.8344,
+    "recall": 0.8222,
+    "f1_score": 0.8283,
+    "roc_auc": 0.9272,
     "confusion_matrix": [
       [
-        1379,
-        329
+        915,
+        179
       ],
       [
-        212,
-        1367
+        195,
+        902
       ]
     ]
   },
   {
     "model_name": "HistGradientBoosting (GBDT)",
-    "accuracy": 0.9063,
-    "precision": 0.8808,
-    "recall": 0.931,
-    "f1_score": 0.9052,
-    "roc_auc": 0.9713,
+    "accuracy": 0.9261,
+    "precision": 0.909,
+    "recall": 0.9471,
+    "f1_score": 0.9277,
+    "roc_auc": 0.9783,
     "confusion_matrix": [
       [
-        1509,
-        199
+        990,
+        104
       ],
       [
-        109,
-        1470
+        58,
+        1039
       ]
     ]
   }

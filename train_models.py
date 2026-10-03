@@ -73,7 +73,7 @@ def load_and_split_data(features_csv: str):
 
     min_year = df["year"].min()
     max_year = df["year"].max()
-    split_ratio = 0.70
+    split_ratio = 0.80
     split_year = int(min_year + split_ratio * (max_year - min_year))
 
     train_mask = df["year"] <= split_year
@@ -90,8 +90,8 @@ def load_and_split_data(features_csv: str):
 
     print(f"      Total records: {len(df):,} across years {min_year} to {max_year}")
     print(f"      Selected {len(feature_cols)} clean predictive atmospheric features.")
-    print(f"      Train set (70% | {min_year}-{split_year}): {X_train.shape[0]:,} samples (Positive class: {y_train.mean()*100:.1f}%)")
-    print(f"      Test set  (30% | {split_year+1}-{max_year}):  {X_test.shape[0]:,} samples (Positive class: {y_test.mean()*100:.1f}%)")
+    print(f"      Train set (80% | {min_year}-{split_year}): {X_train.shape[0]:,} samples (Positive class: {y_train.mean()*100:.1f}%)")
+    print(f"      Test set  (20% | {split_year+1}-{max_year}):  {X_test.shape[0]:,} samples (Positive class: {y_test.mean()*100:.1f}%)")
 
     return X_train, y_train, X_test, y_test, X_full, y_full, feature_cols, min_year, max_year, split_year
 

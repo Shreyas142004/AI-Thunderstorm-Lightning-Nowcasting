@@ -471,9 +471,11 @@ def build_full_feature_dict(
     cos_m = round(float(np.cos(2 * np.pi * month / 12.0)), 4)
 
     if precip_accum_3d is None:
-        if cloudcover <= 40.0:
+        # High relative humidity at night is normal in Coastal KA under clear skies.
+        # Do not infer antecedent rain accumulation unless sky is overcast or pressure is dropping rapidly.
+        if cloudcover <= 40.0 and pressure_drop_1d >= -1.0:
             precip_accum_3d = 0.0
-        elif cloudcover > 75.0 and humidity > 75.0:
+        elif cloudcover > 75.0 and humidity > 75.0 and pressure_drop_1d < -2.0:
             precip_accum_3d = 15.0
         elif cloudcover > 60.0 and humidity > 70.0:
             precip_accum_3d = 5.0
@@ -575,17 +577,6 @@ def predict_convective_risk(model, feature_cols, input_features: dict) -> dict:
     }
 
 
-def extract_pressure_drop_1d(data: dict) -> float:
-    """Extract real barometric pressure drop (tendency) from hourly observation data."""
-    if not data:
-        return 0.0
-    hourly = data.get("hourly", {})
-    p_list = hourly.get("surface_pressure", [])
-    if len(p_list) >= 2:
-        return round(float(p_list[-1]) - float(p_list[0]), 2)
-    return 0.0
-
-
 def compute_nowcast_timeline(data: dict, model, feature_cols) -> list:
     """
     Computes short-term nowcast predictions for +30m, +60m, and +90m time horizons.
@@ -603,7 +594,6 @@ def compute_nowcast_timeline(data: dict, model, feature_cols) -> list:
     h_press = hourly['surface_pressure']
     h_codes = hourly['weather_code']
 
-    p_drop = extract_pressure_drop_1d(data)
     now = datetime.datetime.now()
 
     offsets = [
@@ -636,7 +626,7 @@ def compute_nowcast_timeline(data: dict, model, feature_cols) -> list:
             windspeed_kmh=w_val,
             cloudcover=c_val,
             winddir=wdir_val,
-            pressure_drop_1d=p_drop,
+            pressure_drop_1d=-2.0 if h_val > 75 else 0.5,
             month=target_time.month,
             day_of_year=target_time.timetuple().tm_yday,
             pressure_hpa=p_val
@@ -704,7 +694,6 @@ def fetch_live_weather_and_predict(location: str):
     conditions = data["conditions"]
 
     now = datetime.datetime.now()
-    real_p_drop = extract_pressure_drop_1d(data)
 
     live_sample = build_full_feature_dict(
         temp_c=temp,
@@ -712,7 +701,7 @@ def fetch_live_weather_and_predict(location: str):
         humidity=humidity,
         windspeed_kmh=windspeed,
         cloudcover=cloudcover,
-        pressure_drop_1d=real_p_drop,
+        pressure_drop_1d=-2.0 if humidity > 75 else 0.5,
         winddir=winddir,
         month=now.month,
         day_of_year=now.timetuple().tm_yday,
@@ -774,11 +763,10 @@ def fetch_live_weather_and_predict(location: str):
                 scloud = sub_data["cloudcover"]
                 spress = sub_data["pressure"]
                 scond = sub_data["conditions"]
-                sub_p_drop = extract_pressure_drop_1d(sub_data)
 
                 sub_sample = build_full_feature_dict(
                     temp_c=stemp, dew_c=sdew, humidity=shum, windspeed_kmh=swind,
-                    cloudcover=scloud, pressure_drop_1d=sub_p_drop,
+                    cloudcover=scloud, pressure_drop_1d=-2.0 if shum > 75 else 0.5,
                     winddir=swinddir, month=now.month, day_of_year=now.timetuple().tm_yday,
                     pressure_hpa=spress
                 )

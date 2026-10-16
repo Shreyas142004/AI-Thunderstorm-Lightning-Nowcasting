@@ -17,11 +17,13 @@ Description:
 import sys
 import os
 import json
+# pyrefly: ignore[missing-import]
 import joblib
 import argparse
 import datetime
 import urllib.request
 import urllib.parse
+# pyrefly: ignore[missing-import]
 import numpy as np
 import pandas as pd
 from pathlib import Path

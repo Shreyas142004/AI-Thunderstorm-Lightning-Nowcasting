@@ -32,6 +32,7 @@ load_env_file(BASE_DIR / ".env")
 
 # API Keys
 VISUAL_CROSSING_API_KEY = os.getenv("VISUAL_CROSSING_API_KEY", "")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 # Directory Paths
 DATASET_DIR = BASE_DIR / "dataset"

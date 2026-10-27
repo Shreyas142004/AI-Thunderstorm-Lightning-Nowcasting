@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AeroCast AI — Karnataka Convective Nowcasting System</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Custom Stylesheet with Universal Loading Fallback -->
+  <link rel="stylesheet" id="aerocastCss" href="/static/css/style.css?v=dynamic_risk_colors_v3">
+  <!-- Leaflet Map CSS with Fallback -->
+  <link rel="stylesheet" id="leafletCss" href="/static/vendor/leaflet.css">
+  <script>
+    (function() {
+      var isFile = (window.location.protocol === 'file:');
+      var path = window.location.pathname || '';
+      var isInsideTemplates = path.indexOf('templates') !== -1;
+      if (isFile) {
+        document.getElementById('aerocastCss').href = (isInsideTemplates ? '../static/css/style.css' : 'static/css/style.css') + '?v=dynamic_risk_colors_v3';
+        document.getElementById('leafletCss').href = isInsideTemplates ? '../static/vendor/leaflet.css' : 'static/vendor/leaflet.css';
+      } else if (isInsideTemplates) {
+        document.getElementById('aerocastCss').href = '../static/css/style.css?v=dynamic_risk_colors_v3';
+        document.getElementById('leafletCss').href = '../static/vendor/leaflet.css';
+      }
+    })();
+  </script>
+</head>
+<body data-theme="light">
+
+  <div class="app-wrapper">
+
+    <!-- Fullscreen Convective Weather Prediction Loading Animation -->
+    <div id="nowcastLoadingOverlay" class="loading-screen-overlay" style="display: none;">
+      <div class="loading-screen-modal">
+        <!-- Animated Doppler Radar Sweep Scanner -->
+        <div class="radar-scanner-sphere">
+          <div class="scanner-sweep-beam"></div>
+          <div class="scanner-ring ring-1"></div>
+          <div class="scanner-ring ring-2"></div>
+          <div class="scanner-ring ring-3"></div>
+          <div class="scanner-crosshair-x"></div>
+          <div class="scanner-crosshair-y"></div>
+          <div class="scanner-blip blip-center"></div>
+          <div class="scanner-blip blip-satellite-1"></div>
+          <div class="scanner-blip blip-satellite-2"></div>
+        </div>
+
+        <div class="loading-modal-content">
+          <div class="loading-step-pill">
+            <span class="loading-pulse-dot"></span>
+            <span>AEROCAST AI CONVECTIVE ENGINE</span>
+          </div>
+          <h2 class="loading-modal-title">Analyzing Convective Weather...</h2>
+          <div class="loading-target-location">
+            Target Observatory: <strong id="loadingTargetName">Puttur</strong>
+          </div>
+          <p id="loadingStatusSub" class="loading-status-text">Acquiring real-time Doppler radar & AWS surface telemetry...</p>
+          <div class="loading-progress-bar-wrap">
+            <div class="loading-progress-bar-fill"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Out-of-Karnataka Boundary Warning Alert -->
+    <div id="outOfBoundsWarning" class="out-of-bounds-banner" style="display: none;">
+      <div class="warning-banner-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+          <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <div class="warning-banner-body">
+        <div class="warning-banner-title">⚠️ LOCATION OUTSIDE KARNATAKA STATE BOUNDARY</div>
+        <div id="outOfBoundsText" class="warning-banner-message">
+          The place you searched is outside Karnataka state! AeroCast AI convective models and S-band Doppler radar are specifically trained and calibrated on Karnataka & Western Ghats atmospheric physics (11.5°N - 18.6°N, 74.0°E - 78.6°E). Predictions shown are experimental.
+        </div>
+      </div>
+      <div class="warning-banner-actions">
+        <button type="button" class="warning-action-btn" onclick="searchLocationDirect('Puttur')">Switch to Puttur</button>
+        <button type="button" class="warning-action-btn" onclick="searchLocationDirect('Bengaluru')">Switch to Bengaluru</button>
+        <button type="button" class="warning-close-btn" onclick="dismissOutOfBoundsWarning()" title="Dismiss">&times;</button>
+      </div>
+    </div>
+
+    <!-- Environment / Connection Mode Banner -->
+    <div id="connectionBanner" class="connection-banner" style="display: none;">
+      <div class="banner-content">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="bannerMessage">Offline Preview Mode — To stream live Open-Meteo telemetry & Google Gemini AI advisories, launch <code>python app.py</code> in your terminal and visit <a href="http://127.0.0.1:5000" target="_blank">http://127.0.0.1:5000</a></span>
+        <button class="banner-close" onclick="document.getElementById('connectionBanner').style.display='none'">&times;</button>
+      </div>
+    </div>
+
+    <!-- Top Navigation Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-glyph">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+            <path d="m13 10-3 5h4l-2 5"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-title-row">
+            <h1 class="brand-title">AeroCast AI</h1>
+            <span class="brand-badge">Karnataka Nowcast</span>
+          </div>
+          <span class="brand-sub">62-Feature Atmospheric GBDT Ensemble &bull; Gemini Powered</span>
+        </div>
+      </div>
+
+      <div class="header-center" title="Live Indian Standard Time (UTC+5:30) • Karnataka Nowcast Baseline">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <span id="liveClock" class="clock-display">Loading Time...</span>
+        <script>
+          (function() {
+            try {
+              var el = document.getElementById('liveClock');
+              if (el) {
+                el.textContent = new Date().toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }) + ' IST';
+              }
+            } catch(e) {}
+          })();
+        </script>
+      </div>
+
+      <div class="header-actions">
+        <!-- Location Search Bar (Type any place in Karnataka freely) -->
+        <form id="locationSearchForm" class="location-search-form" onsubmit="handleLocationSearch(event)">
+          <div class="location-search-wrapper">
+            <svg class="search-pin-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+            </svg>
+            <input 
+              type="text" 
+              id="locationInput" 
+              class="location-search-input" 
+              placeholder="Search any place in Karnataka (e.g. Puttur, Bantwal, Udupi)..." 
+              value="Puttur" 
+              autocomplete="off" 
+              list="karnatakaPlacesList"
+            >
+            <button type="submit" class="search-submit-btn" id="searchSubmitBtn" title="Run AI Nowcast">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+              </svg>
+              <span>Predict</span>
+            </button>
+          </div>
+          <datalist id="karnatakaPlacesList">
+            <option value="Puttur">Puttur (Dakshina Kannada)</option>
+            <option value="Bantwal">Bantwal (Dakshina Kannada)</option>
+            <option value="Sullia">Sullia (Dakshina Kannada)</option>
+            <option value="Belthangady">Belthangady (Dakshina Kannada)</option>
+            <option value="Mangaluru">Mangaluru / Mangalore (Coastal)</option>
+            <option value="Moodbidri">Moodbidri (Jain Kashi)</option>
+            <option value="Kadaba">Kadaba (Ghats Belt)</option>
+            <option value="Udupi">Udupi (Temple Town)</option>
+            <option value="Manipal">Manipal (University Ridge)</option>
+            <option value="Kundapura">Kundapura (Coastal Belt)</option>
+            <option value="Karkala">Karkala (Western Foothills)</option>
+            <option value="Bengaluru">Bengaluru (Urban Hub)</option>
+            <option value="Mysuru">Mysuru (Chamundi Foothills)</option>
+            <option value="Shivamogga">Shivamogga / Shimoga (Ghats)</option>
+            <option value="Bhadravathi">Bhadravathi (Iron & Steel)</option>
+            <option value="Madikeri">Madikeri (Coorg Highlands)</option>
+            <option value="Chikkamagaluru">Chikkamagaluru (Coffee Crest)</option>
+            <option value="Hassan">Hassan (Malnad Gate)</option>
+            <option value="Sakleshpur">Sakleshpur (Bisle Ghats)</option>
+            <option value="Sirsi">Sirsi (Uttara Kannada Crest)</option>
+            <option value="Karwar">Karwar (Coastal Harbor)</option>
+            <option value="Gokarna">Gokarna (Coastal Belt)</option>
+            <option value="Hubballi">Hubballi / Hubli (Commercial Hub)</option>
+            <option value="Dharwad">Dharwad (Education Hub)</option>
+            <option value="Belagavi">Belagavi / Belgaum (Border Valley)</option>
+            <option value="Ballari">Ballari / Bellary (Central KA)</option>
+            <option value="Davangere">Davangere (Textile Hub)</option>
+            <option value="Tumakuru">Tumakuru (Industrial Corridor)</option>
+            <option value="Kolar">Kolar (Eastern Deccan)</option>
+            <option value="Mandya">Mandya (Sugar City)</option>
+            <option value="Vijayapura">Vijayapura / Bijapur (North KA)</option>
+            <option value="Bagalkote">Bagalkote (Ghataprabha Valley)</option>
+            <option value="Kalaburagi">Kalaburagi / Gulbarga (North KA)</option>
+            <option value="Bidar">Bidar (Northern Crown)</option>
+            <option value="Raichur">Raichur (Doab Region)</option>
+            <option value="Yadgir">Yadgir (Krishna Basin)</option>
+            <option value="Chitradurga">Chitradurga (Fort City)</option>
+            <option value="Haveri">Haveri (Cardamom City)</option>
+            <option value="Gadag">Gadag (Deccan Plains)</option>
+            <option value="Koppal">Koppal (Tungabhadra Basin)</option>
+            <option value="Chamarajanagar">Chamarajanagar (Southern Kaveri)</option>
+          </datalist>
+        </form>
+
+        <!-- Theme Toggle Switch -->
+        <div class="theme-switch-container">
+          <button class="theme-switch-btn active" id="btnLight" onclick="setAppTheme('light')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+            </svg>
+            <span>Beige</span>
+          </button>
+          <button class="theme-switch-btn" id="btnDark" onclick="setAppTheme('dark')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+            </svg>
+            <span>Espresso</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Dynamic Canvas Grid -->
+    <main class="main-dashboard-grid">
+
+      <!-- LEFT SECTION: Unified Convective Risk Hub & Telemetry Stack -->
+      <section class="left-section">
+        
+        <!-- Hero Convective Risk Card -->
+        <div class="card risk-hero-card">
+          <div class="card-top-row">
+            <h2 class="card-heading">Unified Convective Risk Hub</h2>
+            <span class="model-badge">91.2% Ensemble GBDT</span>
+          </div>
+
+          <div class="dial-container">
+            <svg class="concentric-dial-svg" viewBox="0 0 260 160">
+              <defs>
+                <linearGradient id="dialGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#5E8C68"/>
+                  <stop offset="45%" stop-color="#C98838"/>
+                  <stop offset="100%" stop-color="#C86D51"/>
+                </linearGradient>
+              </defs>
+              <!-- Outer Track -->
+              <path class="dial-track-bg" d="M 30 140 A 100 100 0 0 1 230 140" />
+              <!-- Animated Risk Arc -->
+              <path id="dialFillArc" class="dial-track-fill" d="M 30 140 A 100 100 0 0 1 230 140" />
+              <!-- Inner Decorative Ring -->
+              <path class="dial-inner-ring" d="M 55 140 A 75 75 0 0 1 205 140" />
+            </svg>
+
+            <div class="dial-center-content">
+              <span id="stormProbabilityVal" class="dial-prob-number">--.-%</span>
+              <span class="dial-prob-label">Convective Potential</span>
+            </div>
+          </div>
+
+          <div id="riskAlertBanner" class="risk-alert-pill alert-red">
+            <span class="pulse-indicator"></span>
+            <span id="riskAlertText">FETCHING REAL-TIME OBSERVATIONS...</span>
+          </div>
+
+          <div class="resolved-location-sub">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+            <span id="resolvedAddressText">Locating Karnataka Observatory...</span>
+          </div>
+        </div>
+
+        <!-- 4-Card Telemetry Stack -->
+        <div class="telemetry-stack-grid">
+          
+          <!-- Temperature Card -->
+          <div class="telemetry-card">
+            <div class="telemetry-card-top">
+              <span class="telemetry-label">Temperature</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-honey)" stroke-width="2.2"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
+            </div>
+            <div id="tempVal" class="telemetry-number">--.-°C</div>
+            <div id="feelsLikeSub" class="telemetry-sub">Feels like --.-°C</div>
+          </div>
+
+          <!-- Dew Point Depression Card -->
+          <div class="telemetry-card">
+            <div class="telemetry-card-top">
+              <span class="telemetry-label">Dew Point (DPD)</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-lavender)" stroke-width="2.2"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></svg>
+            </div>
+            <div id="dpdVal" class="telemetry-number">--.-°C</div>
+            <div id="dpdStatusSub" class="telemetry-sub accent-sage-text">Near Saturation</div>
+          </div>
+
+          <!-- Vapor Pressure Deficit Card -->
+          <div class="telemetry-card">
+            <div class="telemetry-card-top">
+              <span class="telemetry-label">Vapor Deficit (VPD)</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-sage)" stroke-width="2.2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+            </div>
+            <div id="vpdVal" class="telemetry-number">--.- hPa</div>
+            <div id="vpdSub" class="telemetry-sub">Magnus-Tetens</div>
+          </div>
+
+          <!-- Pressure Tendency Card -->
+          <div class="telemetry-card">
+            <div class="telemetry-card-top">
+              <span class="telemetry-label">Pressure Drop</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-terracotta)" stroke-width="2.2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+            </div>
+            <div id="pressureDropVal" class="telemetry-number accent-terracotta-text">--.- hPa</div>
+            <div class="trend-wave-container">
+              <svg class="trend-wave-svg" viewBox="0 0 80 20" fill="none">
+                <path d="M 0 5 Q 20 2 40 10 T 80 18" stroke="var(--accent-terracotta)" stroke-width="2.2" stroke-linecap="round"/>
+              </svg>
+              <span class="telemetry-sub" style="color: var(--accent-terracotta);">Rapid Fall</span>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- RIGHT SECTION: Radar Map Surface + Interconnected Timeline + Gemini Advisory -->
+      <section class="right-section">
+
+        <!-- Karnataka Doppler Radar Canvas -->
+        <div class="card radar-canvas-card">
+          <div class="radar-card-header">
+            <div>
+              <h2 class="card-heading">Karnataka Doppler Radar</h2>
+              <span class="radar-subtext">Active S-Band Coastal & Western Ghats Convective Reflectivity</span>
+            </div>
+            <div class="radar-meta-group">
+              <span class="radar-tag"><span class="radar-live-blip"></span> S-Band Doppler Live</span>
+              <span id="radarUpdateTag" class="radar-tag">Updated: Live</span>
+              <button type="button" id="radarCenterBtn" class="radar-action-btn" onclick="centerMapOnCurrentLocation()" title="Center on Selected Station">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg>
+                <span>Center Station</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Side-by-Side Grid Layout: Radar Map on Left, Places Details on Right -->
+          <div class="radar-flex-container">
+            <!-- Left: Radar Map Viewport (Fixed Zoom) -->
+            <div class="radar-map-column">
+              <div class="radar-map-viewport" id="radarMapViewport">
+                <!-- Real Leaflet Interactive Doppler Radar Map -->
+                <div id="radarLeafletMap" class="radar-leaflet-container"></div>
+
+                <!-- Doppler Radar dBZ Color Scale Legend -->
+                <div class="radar-legend-card">
+                  <div class="radar-legend-title">Convective Reflectivity (dBZ)</div>
+                  <div class="radar-legend-bar">
+                    <div class="legend-seg seg-green" title="15-30 dBZ: Light Rain">15-30</div>
+                    <div class="legend-seg seg-honey" title="35-45 dBZ: Convective Buildup">35-45</div>
+                    <div class="legend-seg seg-terracotta" title="50-65+ dBZ: Severe Storm / Hail">50-65+</div>
+                  </div>
+                  <div class="radar-legend-labels">
+                    <span>Fair (15)</span>
+                    <span>Pre-Storm (35)</span>
+                    <span>Severe (65+)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Places Details & Micro-Zone Telemetry Panel -->
+            <div class="radar-places-panel" id="radarPlacesPanel">
+              <div class="places-panel-header">
+                <div>
+                  <h3 class="places-panel-title">Places & Micro-Zones</h3>
+                  <div id="placesPanelSub" class="places-panel-sub">Localized taluk convective monitoring</div>
+                </div>
+                <span id="placesRegionBadge" class="places-region-badge">Karnataka Grid</span>
+              </div>
+
+              <!-- Active Focal Station Card -->
+              <div class="active-place-card" id="activePlaceCard">
+                <div class="active-place-top">
+                  <div class="active-place-name-wrap">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent-terracotta)" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <span id="activePlaceName" class="active-place-name">Puttur Observatory</span>
+                  </div>
+                  <span id="activePlaceRiskBadge" class="place-risk-pill risk-pill-red">--.-%</span>
+                </div>
+                <div class="active-place-meta">
+                  <span id="activePlaceCoords">12.7667°N, 75.2016°E</span>
+                  <span id="activePlaceStatus" class="active-place-status">Primary Radar Focal Point</span>
+                </div>
+              </div>
+
+              <!-- Sub-Places / Micro-Zones List -->
+              <div class="places-sublist-wrapper">
+                <div class="places-sublist-header">
+                  <span class="places-sublist-heading">SURROUNDING SUB-ZONES & TALUKS</span>
+                  <span id="placesZoneCount" class="places-count-tag">5 Zones</span>
+                </div>
+                <div id="placesListBody" class="places-list-body">
+                  <!-- Dynamically populated by renderPlacesDetails() -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interconnected 3-Step Timeline Nowcasting Track -->
+        <div class="card timeline-journey-card">
+          <div class="timeline-card-header">
+            <div>
+              <h2 class="card-heading">Timeline Nowcasting Track</h2>
+              <span class="timeline-subtext">3-Step short-term convective cell evolution (+30m, +60m, +90m)</span>
+            </div>
+            <span id="timelineIndicatorPill" class="timeline-indicator-pill">Atmospheric Cooling & Moisture Surge</span>
+          </div>
+
+          <!-- Connected Horizontal Stepper Sequence -->
+          <div class="timeline-stepper-row">
+            
+            <!-- Step 1: +30m -->
+            <div id="stepCard1" class="step-card card-sage">
+              <div class="step-header">
+                <span class="step-badge">Step 1 &bull; +30m</span>
+                <span id="step1Time" class="step-time">--:-- PM</span>
+              </div>
+              <div class="step-body">
+                <div id="step1IconBox" class="step-icon-box box-sage">
+                  <!-- Sun behind Cloud -->
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2v2M4.93 4.93l1.41 1.41M2 12h2M6.34 17.66l-1.41 1.41"/>
+                    <circle cx="12" cy="12" r="4"/>
+                    <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+                  </svg>
+                </div>
+                <div>
+                  <div id="step1Temp" class="step-temp-text">--.-°C</div>
+                  <div id="step1Condition" class="step-condition-text">Partially Cloudy</div>
+                </div>
+              </div>
+              <div class="step-metrics">
+                <span>Cloud: <strong id="step1Cloud">--%</strong></span>
+                <span>Hum: <strong id="step1Hum">--%</strong></span>
+              </div>
+              <div id="step1FooterPill" class="step-footer-pill pill-sage">
+                <span>Risk: <strong id="step1Prob">--.-%</strong></span>
+                <span id="step1PillText">● Calm / Fair</span>
+              </div>
+            </div>
+
+            <!-- Interconnecting Flow Node 1 -->
+            <div id="stepFlowArrow1" class="step-flow-arrow">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent-sage)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </div>
+
+            <!-- Step 2: +60m -->
+            <div id="stepCard2" class="step-card card-honey">
+              <div class="step-header">
+                <span class="step-badge">Step 2 &bull; +60m</span>
+                <span id="step2Time" class="step-time">--:-- PM</span>
+              </div>
+              <div class="step-body">
+                <div id="step2IconBox" class="step-icon-box box-honey">
+                  <!-- Building Cumulus with Flash -->
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+                    <path d="m13 13-2 4h3l-2 4"/>
+                  </svg>
+                </div>
+                <div>
+                  <div id="step2Temp" class="step-temp-text">--.-°C</div>
+                  <div id="step2Condition" class="step-condition-text">Pre-Storm Buildup</div>
+                </div>
+              </div>
+              <div class="step-metrics">
+                <span>Cloud: <strong id="step2Cloud">--%</strong></span>
+                <span>Hum: <strong id="step2Hum">--%</strong></span>
+              </div>
+              <div id="step2FooterPill" class="step-footer-pill pill-honey">
+                <span>Risk: <strong id="step2Prob">--.-%</strong></span>
+                <span id="step2PillText">⚡ Cell Formation</span>
+              </div>
+            </div>
+
+            <!-- Interconnecting Flow Node 2 -->
+            <div id="stepFlowArrow2" class="step-flow-arrow">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent-terracotta)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </div>
+
+            <!-- Step 3: +90m -->
+            <div id="stepCard3" class="step-card card-terracotta">
+              <div class="step-header">
+                <span class="step-badge">Step 3 &bull; +90m</span>
+                <span id="step3Time" class="step-time">--:-- PM</span>
+              </div>
+              <div class="step-body">
+                <div id="step3IconBox" class="step-icon-box box-terracotta">
+                  <!-- Active Thunderstorm Rain Cloud -->
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+                    <line x1="9" y1="20" x2="8" y2="22"/><line x1="13" y1="20" x2="12" y2="22"/><line x1="17" y1="20" x2="16" y2="22"/>
+                    <path d="m14 11-3 5h3l-2 4"/>
+                  </svg>
+                </div>
+                <div>
+                  <div id="step3Temp" class="step-temp-text">--.-°C</div>
+                  <div id="step3Condition" class="step-condition-text">Severe Thunderstorm</div>
+                </div>
+              </div>
+              <div class="step-metrics">
+                <span>Cloud: <strong id="step3Cloud">--%</strong></span>
+                <span>Hum: <strong id="step3Hum">--%</strong></span>
+              </div>
+              <div id="step3FooterPill" class="step-footer-pill pill-terracotta">
+                <span>Risk: <strong id="step3Prob">--.-%</strong></span>
+                <span id="step3PillText">⛈️ Critical Alert</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Gemini AI Meteorological Synoptic Advisory Section -->
+        <div class="card gemini-advisory-card">
+          <div class="gemini-header-row">
+            <div class="gemini-brand-badge">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/>
+              </svg>
+              <span>Gemini AI Synoptic Meteorological Advisory</span>
+            </div>
+            <span id="geminiModelTag" class="gemini-model-pill">gemini-flash-lite</span>
+          </div>
+
+          <div class="gemini-content-body">
+            <p id="geminiBulletinText" class="gemini-bulletin">
+              Analyzing atmospheric boundary-layer instability, moisture flux convergence, and barometric depression over Karnataka...
+            </p>
+
+            <div class="gemini-sectors-grid">
+              <!-- Agriculture -->
+              <div class="sector-tile">
+                <div class="sector-title">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-sage)" stroke-width="2.2"><path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4-.1 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/></svg>
+                  <span>Plantation & Agriculture</span>
+                </div>
+                <div id="geminiAgriText" class="sector-text">Loading agricultural guidance...</div>
+              </div>
+
+              <!-- Travel & Commuter -->
+              <div class="sector-tile">
+                <div class="sector-title">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-honey)" stroke-width="2.2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 17v-4"/><path d="M17 17v-4"/><path d="M12 17V7"/></svg>
+                  <span>Travel & Highway Safety</span>
+                </div>
+                <div id="geminiTravelText" class="sector-text">Loading travel conditions...</div>
+              </div>
+
+              <!-- Aviation & Outdoors -->
+              <div class="sector-tile">
+                <div class="sector-title">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-terracotta)" stroke-width="2.2"><polygon points="12 2 19 21 12 17 5 21 12 2"/></svg>
+                  <span>Aviation & Outdoor Safety</span>
+                </div>
+                <div id="geminiOutdoorText" class="sector-text">Loading hazard warnings...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- Leaflet Map Script with Universal Loading Fallback -->
+  <script>
+    (function() {
+      var isFile = (window.location.protocol === 'file:');
+      var path = window.location.pathname || '';
+      var isInsideTemplates = path.indexOf('templates') !== -1;
+      var jsSrc = '/static/vendor/leaflet.js';
+      if (isFile) {
+        jsSrc = isInsideTemplates ? '../static/vendor/leaflet.js' : 'static/vendor/leaflet.js';
+      } else if (isInsideTemplates) {
+        jsSrc = '../static/vendor/leaflet.js';
+      }
+      var s = document.createElement('script');
+      s.src = jsSrc;
+      document.body.appendChild(s);
+    })();
+  </script>
+
+  <!-- Client Application Script with Universal Loading Fallback -->
+  <script>
+    (function() {
+      var isFile = (window.location.protocol === 'file:');
+      var path = window.location.pathname || '';
+      var isInsideTemplates = path.indexOf('templates') !== -1;
+      var jsSrc = '/static/js/app.js?v=dynamic_risk_colors_v3';
+      if (isFile) {
+        jsSrc = (isInsideTemplates ? '../static/js/app.js' : 'static/js/app.js') + '?v=dynamic_risk_colors_v3';
+      } else if (isInsideTemplates) {
+        jsSrc = '../static/js/app.js?v=dynamic_risk_colors_v3';
+      }
+      var s = document.createElement('script');
+      s.src = jsSrc;
+      document.body.appendChild(s);
+    })();
+  </script>
+</body>
+</html>

@@ -234,6 +234,34 @@ def engineer_atmospheric_features(df: pd.DataFrame) -> pd.DataFrame:
         .round(2)
     )
 
+    # 9. Convective Thermodynamic Instability & Moisture Dynamics
+    # Theta-e proxy (Equivalent Potential Temperature proxy in Kelvin)
+    df["theta_e_proxy"] = (
+        df["temp_c"] + 273.15 + (2.5 * df["vapor_pressure_hpa"])
+    ).round(2)
+
+    # Moisture flux magnitude & directional components (wind vector * vapor pressure)
+    df["moisture_flux_mag"] = (
+        df["windspeed_ms"] * df["vapor_pressure_hpa"]
+    ).round(2)
+    df["moisture_flux_u"] = (
+        (df["wind_u_kmh"] / 3.6) * df["vapor_pressure_hpa"]
+    ).round(2)
+    df["moisture_flux_v"] = (
+        (df["wind_v_kmh"] / 3.6) * df["vapor_pressure_hpa"]
+    ).round(2)
+
+    # 1-day atmospheric tendencies (pre-storm rapid temperature, dew point, and humidity shifts)
+    df["humidity_change_1d"] = (df["humidity"] - df["humidity_lag1"]).round(2)
+    df["temp_change_1d"] = (df["temp_c"] - df["temp_c_lag1"]).round(2)
+    df["dew_change_1d"] = (df["dew_c"] - df["dew_c_lag1"]).round(2)
+
+    # 2-day barometric pressure depression (multi-day synoptic low tracking)
+    if "pressure_interpolated" in df.columns:
+        df["pressure_drop_2d"] = (
+            df["pressure_interpolated"] - df["pressure_interpolated_lag2"]
+        ).round(2)
+
     return df
 
 

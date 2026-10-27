@@ -1,55 +1,109 @@
 [
   {
     "model_name": "Logistic Regression (Baseline)",
-    "accuracy": 0.8836,
-    "precision": 0.8699,
-    "recall": 0.9025,
-    "f1_score": 0.8859,
-    "roc_auc": 0.9524,
+    "accuracy": 0.8643,
+    "precision": 0.8273,
+    "recall": 0.9069,
+    "f1_score": 0.8653,
+    "roc_auc": 0.949,
     "confusion_matrix": [
       [
-        946,
-        148
+        1409,
+        299
       ],
       [
-        107,
-        990
+        147,
+        1432
       ]
     ]
   },
   {
     "model_name": "Random Forest Classifier",
-    "accuracy": 0.8293,
-    "precision": 0.8344,
-    "recall": 0.8222,
-    "f1_score": 0.8283,
-    "roc_auc": 0.9272,
+    "accuracy": 0.8369,
+    "precision": 0.8128,
+    "recall": 0.8581,
+    "f1_score": 0.8349,
+    "roc_auc": 0.9203,
     "confusion_matrix": [
       [
-        915,
-        179
+        1396,
+        312
       ],
       [
-        195,
-        902
+        224,
+        1355
       ]
     ]
   },
   {
     "model_name": "HistGradientBoosting (GBDT)",
-    "accuracy": 0.9261,
-    "precision": 0.909,
-    "recall": 0.9471,
-    "f1_score": 0.9277,
-    "roc_auc": 0.9783,
+    "accuracy": 0.9084,
+    "precision": 0.8732,
+    "recall": 0.9468,
+    "f1_score": 0.9085,
+    "roc_auc": 0.9716,
     "confusion_matrix": [
       [
-        990,
-        104
+        1491,
+        217
       ],
       [
-        58,
-        1039
+        84,
+        1495
+      ]
+    ]
+  },
+  {
+    "model_name": "LightGBM Classifier",
+    "accuracy": 0.909,
+    "precision": 0.8717,
+    "recall": 0.9506,
+    "f1_score": 0.9094,
+    "roc_auc": 0.9713,
+    "confusion_matrix": [
+      [
+        1487,
+        221
+      ],
+      [
+        78,
+        1501
+      ]
+    ]
+  },
+  {
+    "model_name": "XGBoost Classifier",
+    "accuracy": 0.9127,
+    "precision": 0.885,
+    "recall": 0.9405,
+    "f1_score": 0.9119,
+    "roc_auc": 0.9712,
+    "confusion_matrix": [
+      [
+        1515,
+        193
+      ],
+      [
+        94,
+        1485
+      ]
+    ]
+  },
+  {
+    "model_name": "Soft Voting Ensemble (LGBM + XGB + HGB)",
+    "accuracy": 0.9124,
+    "precision": 0.8773,
+    "recall": 0.9506,
+    "f1_score": 0.9125,
+    "roc_auc": 0.9723,
+    "confusion_matrix": [
+      [
+        1498,
+        210
+      ],
+      [
+        78,
+        1501
       ]
     ]
   }

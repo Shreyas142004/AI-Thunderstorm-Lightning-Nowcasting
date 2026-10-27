@@ -26,7 +26,7 @@ from pathlib import Path
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassifier
+from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassifier, VotingClassifier
 from sklearn.metrics import (
     accuracy_score,
     precision_score,
@@ -35,6 +35,8 @@ from sklearn.metrics import (
     roc_auc_score,
     confusion_matrix
 )
+import lightgbm as lgb
+import xgboost as xgb
 
 from config import PROCESSED_DIR, MODELS_DIR
 
@@ -99,27 +101,71 @@ def load_and_split_data(features_csv: str):
 
 
 def build_model_candidates():
-    """Define candidate classification models."""
+    """Define candidate classification models with tuned hyperparameters."""
+    hgb_tuned = HistGradientBoostingClassifier(
+        max_iter=300,
+        learning_rate=0.04,
+        max_leaf_nodes=31,
+        min_samples_leaf=25,
+        l2_regularization=0.3,
+        class_weight="balanced",
+        random_state=42
+    )
+
+    lgb_tuned = lgb.LGBMClassifier(
+        n_estimators=350,
+        learning_rate=0.03,
+        num_leaves=28,
+        min_child_samples=25,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        reg_alpha=0.1,
+        reg_lambda=0.1,
+        class_weight="balanced",
+        random_state=42,
+        verbose=-1
+    )
+
+    xgb_tuned = xgb.XGBClassifier(
+        n_estimators=350,
+        learning_rate=0.03,
+        max_depth=5,
+        min_child_weight=3,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        reg_alpha=0.1,
+        reg_lambda=1.0,
+        eval_metric="logloss",
+        random_state=42
+    )
+
+    voting_ensemble = VotingClassifier(
+        estimators=[
+            ("lgb", lgb_tuned),
+            ("xgb", xgb_tuned),
+            ("hgb", hgb_tuned)
+        ],
+        voting="soft",
+        weights=[1.2, 1.2, 1.0]
+    )
+
     models = {
         "Logistic Regression (Baseline)": Pipeline([
             ("scaler", StandardScaler()),
             ("clf", LogisticRegression(class_weight="balanced", max_iter=1000, random_state=42))
         ]),
         "Random Forest Classifier": RandomForestClassifier(
-            n_estimators=200,
-            max_depth=12,
-            min_samples_split=5,
+            n_estimators=250,
+            max_depth=14,
+            min_samples_split=4,
             class_weight="balanced",
             random_state=42,
             n_jobs=-1
         ),
-        "HistGradientBoosting (GBDT)": HistGradientBoostingClassifier(
-            max_iter=150,
-            learning_rate=0.08,
-            max_leaf_nodes=31,
-            class_weight="balanced",
-            random_state=42
-        )
+        "HistGradientBoosting (GBDT)": hgb_tuned,
+        "LightGBM Classifier": lgb_tuned,
+        "XGBoost Classifier": xgb_tuned,
+        "Soft Voting Ensemble (LGBM + XGB + HGB)": voting_ensemble
     }
     return models
 

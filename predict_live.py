@@ -29,6 +29,11 @@ import pandas as pd
 from pathlib import Path
 
 from config import MODELS_DIR, VISUAL_CROSSING_API_KEY
+from karnataka_places import (
+    resolve_pinpoint_coordinates,
+    is_lat_lon_in_karnataka,
+    is_explicitly_outside_karnataka
+)
 
 # Ensure UTF-8 output encoding for Windows command line interfaces
 if hasattr(sys.stdout, 'reconfigure'):
@@ -142,6 +147,7 @@ KARNATAKA_CITY_COORDINATES = {
     "manipal": {"lat": 13.3525, "lon": 74.7869, "name": "Manipal, Udupi, Karnataka, India"},
     "malpe": {"lat": 13.3582, "lon": 74.7042, "name": "Malpe Coast & Harbor, Udupi, Karnataka, India"},
     "kaup": {"lat": 13.2248, "lon": 74.7431, "name": "Kaup Lighthouse, Udupi, Karnataka, India"},
+    "kundapura": {"lat": 13.6268, "lon": 74.6917, "name": "Kundapura, Udupi, Karnataka, India"},
     "dharwad": {"lat": 15.4589, "lon": 75.0078, "name": "Dharwad City, Karnataka, India"},
     "unkal": {"lat": 15.3857, "lon": 75.1292, "name": "Unkal Lake Zone, Hubli, Karnataka, India"},
     "vidyanagar": {"lat": 15.3670, "lon": 75.1280, "name": "Vidyanagar, Hubli, Karnataka, India"},
@@ -158,6 +164,11 @@ KARNATAKA_CITY_COORDINATES = {
     "kushalnagar": {"lat": 12.4565, "lon": 75.9642, "name": "Kushalnagar, Coorg, Karnataka, India"},
     "gonikoppal": {"lat": 12.1818, "lon": 75.8943, "name": "Gonikoppal, South Coorg, Karnataka, India"},
     "puttur": {"lat": 12.7667, "lon": 75.2016, "name": "Puttur, Dakshina Kannada, Karnataka, India"},
+    "darbe": {"lat": 12.7480, "lon": 75.2010, "name": "Darbe, Puttur, Karnataka, India"},
+    "kabaka": {"lat": 12.7950, "lon": 75.2050, "name": "Kabaka & Nehru Nagar, Puttur, Karnataka, India"},
+    "nehru nagar": {"lat": 12.7950, "lon": 75.2050, "name": "Kabaka & Nehru Nagar, Puttur, Karnataka, India"},
+    "uppinangady": {"lat": 12.8420, "lon": 75.2950, "name": "Uppinangady, Dakshina Kannada, Karnataka, India"},
+    "bantwal": {"lat": 12.8900, "lon": 75.0300, "name": "Bantwal, Dakshina Kannada, Karnataka, India"},
     "vittla": {"lat": 12.7674, "lon": 75.1012, "name": "Vitla (Vittla), Dakshina Kannada, Karnataka, India"},
     "vitla": {"lat": 12.7674, "lon": 75.1012, "name": "Vitla (Vittla), Dakshina Kannada, Karnataka, India"},
     "sullia": {"lat": 12.5606, "lon": 75.3905, "name": "Sullia, Dakshina Kannada, Karnataka, India"}
@@ -169,7 +180,7 @@ KARNATAKA_SUB_LOCATIONS = {
         {"name": "Panambur Port & Beach", "query": "Panambur"},
         {"name": "Bajpe (Mangalore Airport Area)", "query": "Bajpe"},
         {"name": "Kadri Hills & Park Zone", "query": "Kadri"},
-        {"name": "Hampankatta (City Centre)", "query": "Hampankatta"},
+        {"name": "Hampankatta (City Centre)", "query": "Hampankatta", "is_center": True},
         {"name": "Ullal Coastal Zone", "query": "Ullal"},
         {"name": "Bendoorwell & Kankanady", "query": "Kankanady"}
     ],
@@ -192,7 +203,7 @@ KARNATAKA_SUB_LOCATIONS = {
     "udupi": [
         {"name": "Manipal University Hill", "query": "Manipal"},
         {"name": "Malpe Beach & Fishing Harbor", "query": "Malpe"},
-        {"name": "Udupi Town & Temple Square", "query": "Udupi"},
+        {"name": "Udupi Town & Temple Square", "query": "Udupi", "is_center": True},
         {"name": "Kaup Lighthouse & Coast", "query": "Kaup"}
     ],
     "hubli": [
@@ -202,37 +213,37 @@ KARNATAKA_SUB_LOCATIONS = {
         {"name": "Dharwad City Centre", "query": "Dharwad"}
     ],
     "belgaum": [
-        {"name": "Belagavi City & Fort Zone", "query": "Belgaum"},
+        {"name": "Belagavi City & Fort Zone", "query": "Belgaum", "is_center": True},
         {"name": "Sambra Airport Area", "query": "Sambra"},
         {"name": "Tilakwadi", "query": "Tilakwadi"},
         {"name": "Khanapur Western Ghats Border", "query": "Khanapur"}
     ],
     "shimoga": [
-        {"name": "Shivamogga City Centre", "query": "Shimoga"},
+        {"name": "Shivamogga City Centre", "query": "Shimoga", "is_center": True},
         {"name": "Bhadravathi Industrial Zone", "query": "Bhadravathi"},
         {"name": "Jog Falls & Ghats Crest", "query": "Jog Falls"}
     ],
     "karwar": [
-        {"name": "Karwar Bay & Port Zone", "query": "Karwar"},
+        {"name": "Karwar Bay & Port Zone", "query": "Karwar", "is_center": True},
         {"name": "Gokarna Beach Belt", "query": "Gokarna"},
         {"name": "Sirsi Ghats & Forest Region", "query": "Sirsi"},
         {"name": "Dandeli Rainforest Belt", "query": "Dandeli"}
     ],
     "chikmagalur": [
         {"name": "Mullayanagiri Peak", "query": "Mullayanagiri"},
-        {"name": "Chikmagalur Town Centre", "query": "Chikmagalur"},
+        {"name": "Chikmagalur Town Centre", "query": "Chikmagalur", "is_center": True},
         {"name": "Mudigere Coffee Estate Belt", "query": "Mudigere"}
     ],
     "coorg": [
-        {"name": "Madikeri Fort & Town", "query": "Madikeri"},
+        {"name": "Madikeri Fort & Town", "query": "Madikeri", "is_center": True},
         {"name": "Kushalnagar & Cauvery Basin", "query": "Kushalnagar"},
         {"name": "Gonikoppal & South Coorg", "query": "Gonikoppal"}
     ],
     "puttur": [
-        {"name": "Puttur Town Centre & Bus Stand", "query": "Puttur"},
-        {"name": "Darbe & Bedrala Zone", "query": "Puttur"},
-        {"name": "Nehru Nagar & Kabaka Zone", "query": "Puttur"},
-        {"name": "Vitla (Vittla) Town Belt", "query": "vittla"},
+        {"name": "Puttur Town Centre & Bus Stand", "query": "puttur", "is_center": True},
+        {"name": "Darbe & Bedrala Zone", "query": "darbe"},
+        {"name": "Nehru Nagar & Kabaka Zone", "query": "kabaka"},
+        {"name": "Vitla (Vittla) Town Belt", "query": "vitla"},
         {"name": "Sullia Foothills Belt", "query": "sullia"}
     ]
 }
@@ -298,55 +309,46 @@ def get_city_key_if_major(location_query: str, resolved_address: str) -> str:
 
 def resolve_karnataka_coordinates(location: str) -> dict:
     """
-    Resolve coordinates specifically for Karnataka locations, preventing
-    mis-geocoding to foreign regions (e.g. Pakistan or Japan).
+    Resolve coordinates for requested locations, accurately flagging whether
+    the place is inside Karnataka state or outside Karnataka (e.g. Goa, Sikkim, Andhra Pradesh, Mumbai).
     """
-    loc_key = location.lower().strip()
-
-    # 1. Exact match in pre-computed Karnataka database
-    if loc_key in KARNATAKA_CITY_COORDINATES:
-        return KARNATAKA_CITY_COORDINATES[loc_key]
-
-    # 2. Substring match in pre-computed database
-    for k, info in KARNATAKA_CITY_COORDINATES.items():
-        if k in loc_key or loc_key in k:
-            return info
-
-    # 3. Dynamic geocoding with strict Karnataka, India search
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
-    gurl = f"https://geocoding-api.open-meteo.com/v1/search?name={urllib.parse.quote(location + ' Karnataka India')}&count=5&language=en&format=json"
-    
-    try:
-        greq = urllib.request.Request(gurl, headers=headers)
-        gresp = urllib.request.urlopen(greq, timeout=6)
-        gdata = json.loads(gresp.read().decode('utf-8'))
-        results = gdata.get('results', [])
-
-        for r in results:
-            country = r.get('country', '').lower()
-            admin1 = r.get('admin1', '').lower()
-            if country == 'india' and ('karnataka' in admin1 or admin1 == ''):
-                return {
-                    "lat": float(r['latitude']),
-                    "lon": float(r['longitude']),
-                    "name": f"{r.get('name')}, {r.get('admin1', 'Karnataka')}, India"
-                }
-    except Exception:
-        pass
-
-    return None
+    return resolve_pinpoint_coordinates(location)
 
 
 def fetch_weather_data_accurate(location: str) -> dict:
     """
-    Fetch pinpoint, real-time meteorological observations for Karnataka locations.
+    Fetch pinpoint, real-time meteorological observations for any location
+    with strict state-boundary identification.
+    If a place is outside Karnataka, it accurately returns its real coordinates
+    with is_karnataka=False so that no false weather is displayed on Karnataka grid.
     """
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
-    coord_info = resolve_karnataka_coordinates(location)
+    headers = {'User-Agent': 'AeroCast/2.0 (Karnataka Convective Weather Nowcasting)'}
+    coord_info = resolve_pinpoint_coordinates(location)
 
     if coord_info:
         lat, lon = coord_info["lat"], coord_info["lon"]
         resolved_name = coord_info["name"]
+        is_ka = coord_info.get("is_karnataka", False)
+
+        # For places strictly outside Karnataka, do NOT fetch/display convective weather
+        if not is_ka:
+            return {
+                "resolved_address": resolved_name,
+                "latitude": lat,
+                "longitude": lon,
+                "is_karnataka": False,
+                "admin1": coord_info.get("admin1", ""),
+                "country": coord_info.get("country", ""),
+                "temp": None,
+                "dew": None,
+                "humidity": None,
+                "windspeed": None,
+                "winddir": None,
+                "cloudcover": None,
+                "pressure": None,
+                "conditions": "Prediction Disabled (Outside Karnataka)",
+                "hourly": {}
+            }
 
         try:
             wurl = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,relative_humidity_2m,dew_point_2m,surface_pressure,wind_speed_10m,wind_direction_10m,cloud_cover,weather_code,precipitation&hourly=temperature_2m,relative_humidity_2m,dew_point_2m,surface_pressure,wind_speed_10m,wind_direction_10m,cloud_cover,weather_code,precipitation&forecast_hours=6"
@@ -363,6 +365,11 @@ def fetch_weather_data_accurate(location: str) -> dict:
 
             return {
                 "resolved_address": resolved_name,
+                "latitude": lat,
+                "longitude": lon,
+                "is_karnataka": True,
+                "admin1": coord_info.get("admin1", "Karnataka"),
+                "country": coord_info.get("country", "India"),
                 "temp": float(wdata['temperature_2m']),
                 "dew": float(wdata['dew_point_2m']),
                 "humidity": float(wdata['relative_humidity_2m']),
@@ -373,11 +380,11 @@ def fetch_weather_data_accurate(location: str) -> dict:
                 "conditions": cond_text,
                 "hourly": hourly_data
             }
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[WARNING] Open-Meteo live fetch failed for '{location}': {e}")
 
-    # Fallback to Visual Crossing API with explicit Karnataka suffix
-    if VISUAL_CROSSING_API_KEY:
+    # Fallback to Visual Crossing API only for verified Karnataka queries
+    if VISUAL_CROSSING_API_KEY and coord_info and coord_info.get("is_karnataka"):
         try:
             vurl = f"https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{urllib.parse.quote(location + ', Karnataka, India')}?unitGroup=metric&key={VISUAL_CROSSING_API_KEY}&contentType=json"
             vreq = urllib.request.Request(vurl, headers=headers)
@@ -395,6 +402,9 @@ def fetch_weather_data_accurate(location: str) -> dict:
 
             return {
                 "resolved_address": resolved_name,
+                "latitude": coord_info["lat"],
+                "longitude": coord_info["lon"],
+                "is_karnataka": True,
                 "temp": temp_val,
                 "dew": float(curr.get("dew", 20.0)),
                 "humidity": float(curr.get("humidity", 70.0)),
@@ -404,10 +414,27 @@ def fetch_weather_data_accurate(location: str) -> dict:
                 "pressure": float(curr.get("pressure", 1012.0)),
                 "conditions": cond_text
             }
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[WARNING] Visual Crossing fallback failed for '{location}': {e}")
 
-    raise ValueError(f"Could not retrieve live weather observations for '{location}'. Please check connection.")
+    # Ultimate fallback for completely unknown/failed queries
+    return {
+        "resolved_address": f"{location} (Outside Karnataka)",
+        "latitude": 20.5937,
+        "longitude": 78.9629,
+        "is_karnataka": False,
+        "admin1": "Unknown",
+        "country": "Unknown",
+        "temp": None,
+        "dew": None,
+        "humidity": None,
+        "windspeed": None,
+        "winddir": None,
+        "cloudcover": None,
+        "pressure": None,
+        "conditions": "Prediction Disabled (Outside Karnataka)",
+        "hourly": {}
+    }
 
 
 # -----------------------------------------------------------------------------
@@ -473,14 +500,11 @@ def build_full_feature_dict(
     cos_m = round(float(np.cos(2 * np.pi * month / 12.0)), 4)
 
     if precip_accum_3d is None:
-        # High relative humidity at night is normal in Coastal KA under clear skies.
-        # Do not infer antecedent rain accumulation unless sky is overcast or pressure is dropping rapidly.
-        if cloudcover <= 40.0 and pressure_drop_1d >= -1.0:
-            precip_accum_3d = 0.0
-        elif cloudcover > 75.0 and humidity > 75.0 and pressure_drop_1d < -2.0:
-            precip_accum_3d = 15.0
-        elif cloudcover > 60.0 and humidity > 70.0:
-            precip_accum_3d = 5.0
+        # Avoid artificial cliff edges. Unless dense cloud cover (>85%) and strong low pressure, antecedent rain is 0
+        if cloudcover > 85.0 and humidity > 85.0 and pressure_drop_1d < -2.0:
+            precip_accum_3d = 4.0
+        elif cloudcover > 75.0 and humidity > 80.0 and pressure_drop_1d < -1.0:
+            precip_accum_3d = 1.0
         else:
             precip_accum_3d = 0.0
 
@@ -540,7 +564,15 @@ def build_full_feature_dict(
         "precip_accum_3d": precip_accum_3d,
         "precip_accum_7d": precip_accum_3d * 1.5,
         "humidity_mean_3d": humidity,
-        "temp_max_3d": temp_c + 2.5
+        "temp_max_3d": temp_c + 2.5,
+        "theta_e_proxy": round(temp_c + 273.15 + (2.5 * vp), 2),
+        "moisture_flux_mag": round(windspeed_ms * vp, 2),
+        "moisture_flux_u": round((wind_u_kmh / 3.6) * vp, 2),
+        "moisture_flux_v": round((wind_v_kmh / 3.6) * vp, 2),
+        "humidity_change_1d": 0.0,
+        "temp_change_1d": 0.0,
+        "dew_change_1d": 0.0,
+        "pressure_drop_2d": round(pressure_drop_1d * 1.5, 2)
     }
     return sample
 
@@ -628,7 +660,7 @@ def compute_nowcast_timeline(data: dict, model, feature_cols) -> list:
             windspeed_kmh=w_val,
             cloudcover=c_val,
             winddir=wdir_val,
-            pressure_drop_1d=-2.0 if h_val > 75 else 0.5,
+            pressure_drop_1d=round(min(1.5, max(-3.0, (1011.0 - p_val) * 0.4)), 2),
             month=target_time.month,
             day_of_year=target_time.timetuple().tm_yday,
             pressure_hpa=p_val
@@ -703,7 +735,7 @@ def fetch_live_weather_and_predict(location: str):
         humidity=humidity,
         windspeed_kmh=windspeed,
         cloudcover=cloudcover,
-        pressure_drop_1d=-2.0 if humidity > 75 else 0.5,
+        pressure_drop_1d=round(min(1.5, max(-3.0, (1011.0 - pressure) * 0.4)), 2),
         winddir=winddir,
         month=now.month,
         day_of_year=now.timetuple().tm_yday,

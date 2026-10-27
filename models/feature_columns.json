@@ -52,5 +52,13 @@
   "precip_accum_3d",
   "precip_accum_7d",
   "humidity_mean_3d",
-  "temp_max_3d"
+  "temp_max_3d",
+  "theta_e_proxy",
+  "moisture_flux_mag",
+  "moisture_flux_u",
+  "moisture_flux_v",
+  "humidity_change_1d",
+  "temp_change_1d",
+  "dew_change_1d",
+  "pressure_drop_2d"
 ]

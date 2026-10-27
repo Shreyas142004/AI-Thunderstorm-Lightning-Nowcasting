@@ -1,0 +1,28 @@
+# ==============================================================================
+# AeroCast AI — Convective Weather & Thunderstorm Nowcasting System
+# Dependencies and Environment Specifications
+# ==============================================================================
+
+# Web Framework & Server
+Flask>=3.0.0
+Werkzeug>=3.0.0
+
+# Scientific Computing & Data Manipulation
+numpy>=1.24.0
+pandas>=2.0.0
+scipy>=1.10.0
+openpyxl>=3.1.0
+
+# Machine Learning & Gradient Boosted Ensembles
+scikit-learn>=1.3.0
+lightgbm>=4.0.0
+xgboost>=2.0.0
+joblib>=1.3.0
+
+# HTTP Requests, Environment & Utilities
+requests>=2.31.0
+python-dotenv>=1.0.0
+
+# Deliverables & Presentation Generation
+python-pptx>=1.0.0
+

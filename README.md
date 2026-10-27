@@ -85,6 +85,7 @@ D:\Projects\Major-Project\
 ├── predict_live.py                 # Live Meteorological Telemetry Fetcher & ML Pipeline
 ├── preprocess_features.py          # 62-Feature Physics Engineering Pipeline
 ├── train_models.py                 # GBDT Model Benchmarking & Serialization Script
+├── requirements.txt                # Python Dependencies & Environment Specifications
 ├── README.md                       # Comprehensive Project Documentation
 ├── .env                            # API Keys & Local Configuration
 ├── .gitignore                      # Git tracking exclusions

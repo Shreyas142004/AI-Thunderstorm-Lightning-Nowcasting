@@ -17,12 +17,19 @@ let stationMarkersGroup = null;
 
 
 // Initialize Application
-document.addEventListener('DOMContentLoaded', () => {
+function initApp() {
   setAppTheme(currentTheme);
   startLiveClock();
   initRadarMap();
-  fetchNowcast(currentLocation);
-});
+  // Do NOT automatically predict on page load / reload:
+  setIdleDashboardState();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
 
 
 /**
@@ -60,6 +67,7 @@ function startLiveClock() {
  */
 function setAppTheme(theme) {
   currentTheme = theme;
+  document.documentElement.setAttribute('data-theme', theme);
   document.body.setAttribute('data-theme', theme);
   localStorage.setItem('aerocast_theme', theme);
 
@@ -400,16 +408,99 @@ function hideLoadingScreen() {
 }
 
 /**
+ * Sets Dashboard to Idle / Ready State without running auto-predictions
+ */
+function setIdleDashboardState() {
+  const overlay = document.getElementById('nowcastLoadingOverlay');
+  if (overlay) {
+    overlay.classList.remove('active');
+    overlay.style.display = 'none';
+  }
+
+  const alertEl = document.getElementById('riskAlertBanner');
+  const alertText = document.getElementById('riskAlertText');
+  if (alertEl) alertEl.className = 'risk-alert-pill alert-idle';
+  if (alertText) alertText.textContent = 'READY TO NOWCAST • CLICK PREDICT';
+
+  const probVal = document.getElementById('stormProbabilityVal');
+  if (probVal) probVal.textContent = '--.-%';
+
+  const fillArc = document.getElementById('dialFillArc');
+  if (fillArc) fillArc.style.strokeDashoffset = '314';
+
+  const addressEl = document.getElementById('resolvedAddressText');
+  if (addressEl) addressEl.textContent = 'Search any Karnataka place above (e.g. Puttur, Bengaluru, Udupi)';
+
+  const conditionEl = document.getElementById('conditionVal');
+  if (conditionEl) conditionEl.textContent = 'Awaiting Query';
+
+  // Telemetry stack
+  const tempVal = document.getElementById('tempVal');
+  const feelsLikeSub = document.getElementById('feelsLikeSub');
+  if (tempVal) tempVal.textContent = '--.-°C';
+  if (feelsLikeSub) feelsLikeSub.textContent = 'Feels like --.-°C';
+
+  const dewVal = document.getElementById('dewVal');
+  const dpdSub = document.getElementById('dpdSub');
+  if (dewVal) dewVal.textContent = '--.-°C';
+  if (dpdSub) dpdSub.textContent = 'Dew Point Depression: --.-°C';
+
+  const humVal = document.getElementById('humVal');
+  const vpdSub = document.getElementById('vpdSub');
+  if (humVal) humVal.textContent = '--%';
+  if (vpdSub) vpdSub.textContent = 'Vapor Deficit (VPD): --.- hPa';
+
+  const cloudVal = document.getElementById('cloudVal');
+  const rainSub = document.getElementById('rainSub');
+  if (cloudVal) cloudVal.textContent = '--%';
+  if (rainSub) rainSub.textContent = 'Precipitation: 0.0 mm';
+
+  // Timeline steps
+  for (let step = 1; step <= 3; step++) {
+    const timeEl = document.getElementById(`step${step}Time`);
+    const statusEl = document.getElementById(`step${step}Status`);
+    const tempEl = document.getElementById(`step${step}Temp`);
+    const cloudEl = document.getElementById(`step${step}Cloud`);
+    const humEl = document.getElementById(`step${step}Hum`);
+    const probEl = document.getElementById(`step${step}Prob`);
+    const footerEl = document.getElementById(`step${step}FooterPill`);
+    const pillTextEl = document.getElementById(`step${step}PillText`);
+
+    if (timeEl) timeEl.textContent = step === 1 ? '+30 Mins' : (step === 2 ? '+60 Mins' : '+90 Mins');
+    if (statusEl) statusEl.textContent = 'Pending Prediction';
+    if (tempEl) tempEl.textContent = '--.-°C';
+    if (cloudEl) cloudEl.textContent = '--%';
+    if (humEl) humEl.textContent = '--%';
+    if (probEl) probEl.textContent = '--.-%';
+    if (footerEl) footerEl.className = 'step-footer-pill pill-muted';
+    if (pillTextEl) pillTextEl.textContent = 'Standby';
+  }
+
+  // Gemini advisory placeholders
+  const bulletinEl = document.getElementById('geminiBulletinText');
+  if (bulletinEl) bulletinEl.textContent = 'Type any Karnataka location above and click "Predict" to see live weather, thunderstorm risk, and simple daily safety advice.';
+
+  const agriEl = document.getElementById('geminiAgriText');
+  if (agriEl) agriEl.textContent = 'Awaiting location query...';
+
+  const travelEl = document.getElementById('geminiTravelText');
+  if (travelEl) travelEl.textContent = 'Awaiting location query...';
+
+  const outdoorEl = document.getElementById('geminiOutdoorText');
+  if (outdoorEl) outdoorEl.textContent = 'Awaiting location query...';
+}
+
+/**
  * Free-Form Location Search Handler
  */
 function handleLocationSearch(event) {
   if (event) event.preventDefault();
   const inputEl = document.getElementById('locationInput');
-  const query = inputEl ? inputEl.value.trim() : '';
+  let query = inputEl ? inputEl.value.trim() : '';
 
   if (!query) {
-    if (inputEl) inputEl.focus();
-    return;
+    query = 'Puttur';
+    if (inputEl) inputEl.value = 'Puttur';
   }
 
   currentLocation = query;

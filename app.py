@@ -49,6 +49,12 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/about")
+def about():
+    """Render the detailed About & Meteorological Concepts page."""
+    return render_template("about.html")
+
+
 @app.route("/favicon.ico")
 def favicon():
     """Avoid 404 for browser favicon requests."""

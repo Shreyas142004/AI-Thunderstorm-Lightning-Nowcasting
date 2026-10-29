@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About AeroCast AI — Karnataka Convective Weather & Nowcasting System</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" id="aerocastCss" href="/static/css/style.css?v=about_v1">
+  <script>
+    (function() {
+      var savedTheme = localStorage.getItem('aerocast_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
+</head>
+<body data-theme="light">
+  <script>
+    (function() {
+      var savedTheme = localStorage.getItem('aerocast_theme') || 'light';
+      document.body.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
+
+  <div class="app-wrapper">
+
+    <!-- Top Navigation Header -->
+    <header class="app-header">
+      <div class="brand">
+        <a href="/" style="display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit;">
+          <div class="brand-glyph">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+              <path d="m13 10-3 5h4l-2 5"/>
+            </svg>
+          </div>
+          <div>
+            <div class="brand-title-row">
+              <h1 class="brand-title">AeroCast AI</h1>
+              <span class="brand-badge">Karnataka Nowcast</span>
+            </div>
+            <span class="brand-sub">Atmospheric Physics & Model Documentation</span>
+          </div>
+        </a>
+      </div>
+
+      <div class="header-actions">
+        <!-- Back to Dashboard Button -->
+        <a href="/" class="nav-back-btn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          <span>Live Dashboard</span>
+        </a>
+
+        <!-- Theme Toggle Switch -->
+        <div class="theme-switch-container">
+          <button class="theme-switch-btn active" id="btnLight" onclick="setAppTheme('light')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+            </svg>
+            <span>Beige</span>
+          </button>
+          <button class="theme-switch-btn" id="btnDark" onclick="setAppTheme('dark')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+            </svg>
+            <span>Espresso</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="about-page-container">
+
+      <!-- HERO SECTION: Project Overview -->
+      <section class="about-hero">
+        <div class="about-pill-tag">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+          System Overview & Mission
+        </div>
+        <h2 class="about-hero-title">What is AeroCast AI?</h2>
+        <p class="about-hero-desc">
+          <strong>AeroCast AI</strong> is an intelligent, physics-informed Convective Weather and Thunderstorm Nowcasting System built specifically for <strong>Karnataka and the Western Ghats</strong>. 
+          Conventional weather forecast models (like GFS and ECMWF) update only once every 3 to 6 hours on coarse grid resolutions (10 to 25 km), completely missing rapid tropical convective cells that form, explode, and strike within <strong>30 to 60 minutes</strong>.
+        </p>
+        <p class="about-hero-desc" style="margin-bottom: 24px;">
+          AeroCast AI bridges this critical gap by ingesting live surface AWS telemetry, calculating <strong>62 domain-specific thermodynamic indices</strong> (like Dew Point Depression and Vapor Pressure Deficit), running a calibrated <strong>Soft-Voting GBDT Ensemble</strong> (LightGBM, XGBoost, HistGradientBoosting) trained on 27 years of Karnataka climatology, and employing <strong>Google Gemini Generative AI</strong> to produce plain-English sector advisories for plantation farmers, highway commuters, and outdoor safety.
+        </p>
+
+        <!-- Metric Stat Badges -->
+        <div class="about-stats-row">
+          <div class="about-stat-box">
+            <span class="about-stat-num">0 – 90 Min</span>
+            <span class="about-stat-label">Frontline Nowcasting (+30m, +60m, +90m)</span>
+          </div>
+          <div class="about-stat-box">
+            <span class="about-stat-num">62 Features</span>
+            <span class="about-stat-label">Atmospheric Thermodynamics & Kinematics</span>
+          </div>
+          <div class="about-stat-box">
+            <span class="about-stat-num">91.24%</span>
+            <span class="about-stat-label">GBDT Ensemble Holdout Accuracy (0.9723 ROC-AUC)</span>
+          </div>
+          <div class="about-stat-box">
+            <span class="about-stat-num">30,753</span>
+            <span class="about-stat-label">Karnataka Villages Indexed (LGD Census)</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION: How AeroCast AI Predicts Thunderstorms -->
+      <section class="how-it-works-card">
+        <div class="threshold-table-header">
+          <div class="about-pill-tag">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+            Prediction Workflow
+          </div>
+          <h3 class="threshold-table-title">⚡ How the Project Predicts Thunderstorms (in 5 Simple Steps)</h3>
+          <p class="threshold-table-desc">
+            Here is the step-by-step process of how AeroCast AI takes live weather data and turns it into a high-accuracy 0 to 90-minute thunderstorm prediction:
+          </p>
+        </div>
+
+        <div class="steps-flow-grid">
+          <!-- Step 1 -->
+          <div class="step-flow-box">
+            <span class="step-number-badge">Step 1</span>
+            <h4 class="step-flow-title">📡 1. Live Weather Fetch</h4>
+            <p class="step-flow-text">
+              When you search any place in Karnataka (like <em>Puttur</em> or <em>Bengaluru</em>), the system checks its exact GPS coordinates and fetches real-time temperature, dew point, humidity, barometric pressure, and wind speed from live weather stations.
+            </p>
+            <div class="step-flow-highlight">
+              Input: Live Open-Meteo & AWS observations
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="step-flow-box">
+            <span class="step-number-badge">Step 2</span>
+            <h4 class="step-flow-title">⚗️ 2. Calculates Storm Physics</h4>
+            <p class="step-flow-text">
+              The system calculates 62 atmospheric physics formulas:
+              <br>&bull; Is the air nearly saturated? (Dew Point Depression & Vapor Deficit)
+              <br>&bull; Is atmospheric pressure falling fast?
+              <br>&bull; What time is it? (Gives higher storm weight to afternoon solar heat between 1 PM and 6 PM).
+            </p>
+            <div class="step-flow-highlight">
+              Physics: DPD, Magnus-Tetens VPD, Diurnal factor (D<sub>f</sub>)
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="step-flow-box">
+            <span class="step-number-badge">Step 3</span>
+            <h4 class="step-flow-title">🧠 3. Three AI Models Vote</h4>
+            <p class="step-flow-text">
+              These 62 physical numbers are fed into 3 powerful AI models (LightGBM, XGBoost, and HistGradientBoosting) trained on 27 years of Karnataka weather history. The 3 models vote together (Soft Voting) to calculate the final storm probability.
+            </p>
+            <div class="step-flow-highlight">
+              Accuracy: 91.24% with 0.9723 ROC-AUC
+            </div>
+          </div>
+
+          <!-- Step 4 -->
+          <div class="step-flow-box">
+            <span class="step-number-badge">Step 4</span>
+            <h4 class="step-flow-title">⏱️ 4. Forecasts Next 90 Mins</h4>
+            <p class="step-flow-text">
+              The system projects convective risk across 3 short-term time horizons: <strong>+30 Mins</strong>, <strong>+60 Mins</strong>, and <strong>+90 Mins</strong>. It shows whether clouds are developing, rain is starting, or a severe storm is arriving.
+            </p>
+            <div class="step-flow-highlight">
+              Timeline: 🟢 Low (&lt;35%) | 🟡 Watch | 🔴 Alert (&ge;70%)
+            </div>
+          </div>
+
+          <!-- Step 5 -->
+          <div class="step-flow-box">
+            <span class="step-number-badge">Step 5</span>
+            <h4 class="step-flow-title">🤖 5. Plain-English Advice</h4>
+            <p class="step-flow-text">
+              Google Gemini AI reads the numbers and radar data, converting them into simple safety advice for:
+              <br>&bull; <strong>Farmers:</strong> Areca nut drying & crops.
+              <br>&bull; <strong>Travelers:</strong> Slippery Ghat roads & fog.
+              <br>&bull; <strong>Public:</strong> Lightning & outdoor safety.
+            </p>
+            <div class="step-flow-highlight">
+              Advisories: Plain English, zero technical jargon
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 2: Core Thermodynamic Parameters Explained -->
+      <div style="margin-bottom: 18px;">
+        <h3 style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-bottom: 6px; font-family: 'Space Grotesk', sans-serif;">
+          🔬 Core Atmospheric Parameters Explained
+        </h3>
+        <p style="font-size: 0.95rem; color: var(--text-secondary);">
+          Discover how each meteorological variable is measured, why it governs convective storm physics, and how AeroCast AI calculates them.
+        </p>
+      </div>
+
+      <div class="about-grid-2col">
+
+        <!-- CARD 1: HUMIDITY -->
+        <div class="concept-card">
+          <div class="concept-card-header">
+            <div class="concept-title-group">
+              <div class="concept-icon-avatar sage">💧</div>
+              <div>
+                <h4 class="concept-card-title">1. Relative Humidity (RH)</h4>
+                <span class="concept-card-sub">Measured in Percentage (%)</span>
+              </div>
+            </div>
+            <span class="risk-level-badge green">Moisture Metric</span>
+          </div>
+
+          <p class="concept-body-text">
+            <strong>Relative Humidity (RH)</strong> is the ratio of water vapor present in the air compared to the maximum amount of water vapor the air can hold at that specific temperature:
+          </p>
+
+          <div class="formula-card-box">
+            <span class="formula-label">Definition Formulation</span>
+            <span class="formula-code">RH = (Actual Vapor Pressure / Saturation Vapor Pressure) &times; 100%</span>
+          </div>
+
+          <ul class="concept-highlight-list">
+            <li class="concept-highlight-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span><strong>Role in Thunderstorms:</strong> High humidity provides the latent heat energy required to sustain powerful convective updrafts once warm air begins rising.</span>
+            </li>
+            <li class="concept-highlight-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span><strong>The "Nocturnal Humidity Trap":</strong> In coastal Karnataka (Puttur, Mangalore, Udupi), nighttime radiative cooling drops temperature near the dew point, driving RH above <strong>90% to 98%</strong> on calm, clear nights.</span>
+            </li>
+          </ul>
+
+          <div class="concept-callout-note">
+            ⚠️ <strong>Why standard AI fails:</strong> Basic ML models confuse 95% nighttime humidity with storms, producing false alarms. AeroCast AI combines RH with diurnal solar heating (D<sub>f</sub>) and DPD to eliminate nocturnal false alarms.
+          </div>
+        </div>
+
+        <!-- CARD 2: DEW POINT & DPD -->
+        <div class="concept-card">
+          <div class="concept-card-header">
+            <div class="concept-title-group">
+              <div class="concept-icon-avatar honey">🌡️</div>
+              <div>
+                <h4 class="concept-card-title">2. Dew Point & DPD</h4>
+                <span class="concept-card-sub">Measured in Degrees Celsius (&deg;C)</span>
+              </div>
+            </div>
+            <span class="risk-level-badge yellow">Saturation Metric</span>
+          </div>
+
+          <p class="concept-body-text">
+            The <strong>Dew Point (T<sub>d</sub>)</strong> is the exact temperature to which air must be cooled at constant pressure to reach 100% saturation, causing water vapor to condense into liquid dew or cloud droplets.
+          </p>
+
+          <div class="formula-card-box">
+            <span class="formula-label">Dew Point Depression Formulation</span>
+            <span class="formula-code">DPD = T (Dry Bulb Temp) &minus; T<sub>d</sub> (Dew Point)</span>
+          </div>
+
+          <ul class="concept-highlight-list">
+            <li class="concept-highlight-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span><strong>Low DPD (&lt; 3.0&deg;C):</strong> Indicates the boundary-layer air is nearly saturated. Cloud base height (LCL) lowers significantly.</span>
+            </li>
+            <li class="concept-highlight-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span><strong>High Dew Point (&ge; 22&deg;C–25&deg;C):</strong> Signals enormous moisture mass in the lower atmosphere, providing high-octane fuel for explosive tropical cumulonimbus development.</span>
+            </li>
+          </ul>
+
+          <div class="concept-callout-note">
+            💡 <strong>Convective Signature:</strong> When high surface temperature (&gt; 28&deg;C) coincides with low DPD (&lt; 3.5&deg;C), the atmosphere has maximum convective available potential energy.
+          </div>
+        </div>
+
+        <!-- CARD 3: VAPOR DEFICIT (VPD) -->
+        <div class="concept-card">
+          <div class="concept-card-header">
+            <div class="concept-title-group">
+              <div class="concept-icon-avatar lavender">🌫️</div>
+              <div>
+                <h4 class="concept-card-title">3. Vapor Pressure Deficit (VPD)</h4>
+                <span class="concept-card-sub">Measured in Hectopascals (hPa)</span>
+              </div>
+            </div>
+            <span class="risk-level-badge green">Evaporative Demand</span>
+          </div>
+
+          <p class="concept-body-text">
+            <strong>Vapor Pressure Deficit (VPD)</strong> is the difference between the pressure exerted by water vapor in completely saturated air (e<sub>s</sub>) and the actual water vapor pressure (e):
+          </p>
+
+          <div class="formula-card-box">
+            <span class="formula-label">Magnus-Tetens Thermodynamic Equation</span>
+            <span class="formula-code">VPD = e<sub>s</sub>(T) &minus; e(T<sub>d</sub>)</span>
+            <span style="font-size: 0.76rem; color: var(--text-muted); margin-top: 4px;">
+              e<sub>s</sub> = 6.112 &times; exp[ (17.67 &times; T) / (T + 243.5) ]
+            </span>
+          </div>
+
+          <ul class="concept-highlight-list">
+            <li class="concept-highlight-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span><strong>Low VPD (&le; 0.8 to 1.2 hPa):</strong> Air cannot absorb additional moisture. Condensation is triggered, accelerating cloud droplet coalescence and rainfall.</span>
+            </li>
+            <li class="concept-highlight-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span><strong>High VPD (&gt; 2.5 hPa):</strong> Air is very dry. Raindrops falling from cloud bases evaporate before reaching the ground (virga effect), suppressing storms.</span>
+            </li>
+          </ul>
+
+          <div class="concept-callout-note">
+            🔬 <strong>Why VPD is superior to RH:</strong> Relative humidity changes non-linearly with temperature, whereas VPD provides a direct, absolute physical measure of the atmospheric saturation gap.
+          </div>
+        </div>
+
+        <!-- CARD 4: PRESSURE DROP -->
+        <div class="concept-card">
+          <div class="concept-card-header">
+            <div class="concept-title-group">
+              <div class="concept-icon-avatar">📉</div>
+              <div>
+                <h4 class="concept-card-title">4. Barometric Pressure Drop (&Delta;P)</h4>
+                <span class="concept-card-sub">Measured in Hectopascals (hPa)</span>
+              </div>
+            </div>
+            <span class="risk-level-badge red">Kinematic Trigger</span>
+          </div>
+
+          <p class="concept-body-text">
+            <strong>Barometric Pressure Drop (&Delta;P)</strong> tracks the rapid change in atmospheric surface pressure over short intervals (1-hour or 24-hour rate of change):
+          </p>
+
+          <div class="formula-card-box">
+            <span class="formula-label">Pressure Tendency Formulation</span>
+            <span class="formula-code">&Delta;P = P<sub>baseline</sub> &minus; P<sub>current</sub> (hPa)</span>
+          </div>
+
+          <ul class="concept-highlight-list">
+            <li class="concept-highlight-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span><strong>Why Pressure Drops Before Storms:</strong> Developing thunderstorms act as intense thermal chimneys. Buoyant, warm air rapidly evacuates upward, creating a localized low-pressure surface vacuum.</span>
+            </li>
+            <li class="concept-highlight-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span><strong>Threshold Indicator (&ge; 1.5 to 3.0 hPa):</strong> A sudden pressure drop of 1.5 hPa or more strongly signals incoming convective convergence, gust fronts, and lightning activity.</span>
+            </li>
+          </ul>
+
+          <div class="concept-callout-note">
+            ⚡ <strong>The Squall Line Indicator:</strong> Just before a severe convective downburst strikes, pressure reaches a sharp minimum before a rapid "pressure jump" caused by the rain-cooled cold pool downdraft.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SECTION 3: THUNDERSTORM THRESHOLDS & RISK CLASSIFICATION -->
+      <section class="threshold-table-card">
+        <div class="threshold-table-header">
+          <div class="about-pill-tag">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Decision Matrix
+          </div>
+          <h3 class="threshold-table-title">What is the Threshold for a Thunderstorm?</h3>
+          <p class="threshold-table-desc">
+            AeroCast AI determines convective thunderstorm potential using multi-criteria atmospheric thresholds and model probability bins:
+          </p>
+        </div>
+
+        <div class="threshold-table-responsive">
+          <table class="about-matrix-table">
+            <thead>
+              <tr>
+                <th>Risk Tier</th>
+                <th>Probability Range</th>
+                <th>Physical Convective State</th>
+                <th>DPD &amp; VPD Threshold</th>
+                <th>Pressure Drop</th>
+                <th>Radar Echo (dBZ)</th>
+                <th>Action &amp; Advisory</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="risk-level-badge green">🟢 LOW RISK</span></td>
+                <td><strong>&lt; 35.0%</strong></td>
+                <td>Fair weather, stable boundary layer, calm or gentle breezes. Minimal vertical updraft energy.</td>
+                <td>DPD &gt; 5.0&deg;C<br>VPD &gt; 1.8 hPa</td>
+                <td>&lt; 0.8 hPa drop</td>
+                <td>&lt; 20 dBZ (Clear Air)</td>
+                <td>Safe for agricultural drying, outdoor transit, and unhindered aviation.</td>
+              </tr>
+              <tr>
+                <td><span class="risk-level-badge yellow">🟡 MODERATE WATCH</span></td>
+                <td><strong>35.0% – 69.9%</strong></td>
+                <td>Convective Initiation (CI). Towering cumulus (TCu) developing, surface wind shifts, isolated showers likely within 30–60 mins.</td>
+                <td>DPD: 2.5&deg;C – 4.5&deg;C<br>VPD: 0.8 – 1.5 hPa</td>
+                <td>1.0 – 1.8 hPa drop</td>
+                <td>25 – 39 dBZ (Moderate Rain)</td>
+                <td>Farmers cover produce; highway commuters monitor Ghat road slickness.</td>
+              </tr>
+              <tr>
+                <td><span class="risk-level-badge red">🔴 CRITICAL ALERT</span></td>
+                <td><strong>&ge; 70.0%</strong></td>
+                <td>Severe Thunderstorm Imminent. Deep cumulonimbus cell, intense cloud-to-ground lightning, severe downbursts (&gt; 50 km/h), heavy convective deluge.</td>
+                <td>DPD &le; 2.5&deg;C<br>VPD &le; 0.8 hPa</td>
+                <td>&ge; 2.0 hPa drop</td>
+                <td>&ge; 45 dBZ (Severe Storm / Hail)</td>
+                <td>Immediate shelter required. Suspend outdoor fieldwork and Ghat pass travel.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Diurnal Heating Factor Details -->
+        <div style="margin-top: 24px; padding: 18px 20px; background: var(--bg-canvas); border-radius: 14px; border: 1px solid var(--card-border);">
+          <h4 style="font-size: 1.05rem; font-weight: 800; color: var(--text-primary); margin-bottom: 8px;">
+            ☀️ The Diurnal Solar Insolation Factor (D<sub>f</sub>)
+          </h4>
+          <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 10px;">
+            Tropical thunderstorms are heat-engine phenomena triggered by solar insolation. In Karnataka, surface heating peaks in the early afternoon, generating intense thermal updrafts. AeroCast AI applies a physics-based diurnal factor:
+          </p>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; font-size: 0.84rem;">
+            <div style="padding: 10px; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--card-border);">
+              <strong style="color: var(--accent-terracotta);">13:00 – 18:00 IST (D<sub>f</sub> = 1.25)</strong><br>
+              <span style="color: var(--text-muted);">Afternoon Thermal Convective Peak</span>
+            </div>
+            <div style="padding: 10px; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--card-border);">
+              <strong style="color: var(--accent-honey);">11:00–13:00 & 18:00–20:00 (D<sub>f</sub> = 1.00)</strong><br>
+              <span style="color: var(--text-muted);">Solar Heating & Evening Transition</span>
+            </div>
+            <div style="padding: 10px; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--card-border);">
+              <strong style="color: var(--accent-sage);">07:00 – 11:00 IST (D<sub>f</sub> = 0.70)</strong><br>
+              <span style="color: var(--text-muted);">Morning Solar Insolation Ramp-up</span>
+            </div>
+            <div style="padding: 10px; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--card-border);">
+              <strong style="color: var(--accent-lavender);">20:00 – 07:00 IST (D<sub>f</sub> = 0.42)</strong><br>
+              <span style="color: var(--text-muted);">Nocturnal Radiative Cooling Phase</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 4: 30,753 VILLAGES BOUNDARY ENGINE -->
+      <section class="threshold-table-card">
+        <div class="threshold-table-header">
+          <div class="about-pill-tag">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>
+            Geofencing & Precision Index
+          </div>
+          <h3 class="threshold-table-title">Authoritative 30,753 Karnataka Villages Engine</h3>
+          <p class="threshold-table-desc">
+            How AeroCast AI prevents out-of-bounds misclassifications and resolves microclimatic regions.
+          </p>
+        </div>
+
+        <p class="concept-body-text" style="margin-bottom: 16px;">
+          The backend indexes all <strong>30,753 villages, 240 taluks, and 31 districts</strong> of Karnataka using the official Government of India Local Government Directory (LGD) census. 
+        </p>
+
+        <div class="about-grid-2col" style="margin-bottom: 0;">
+          <div style="padding: 18px; background: var(--bg-canvas); border-radius: 12px; border: 1px solid var(--card-border);">
+            <h5 style="font-size: 0.96rem; font-weight: 700; color: var(--accent-terracotta); margin-bottom: 6px;">
+              📍 Inside Karnataka Queries
+            </h5>
+            <p style="font-size: 0.86rem; color: var(--text-secondary); line-height: 1.5;">
+              Queries for any village (e.g., <em>Puttur</em>, <em>Nekkilady</em>, <em>108 Kalthur</em>, <em>Bantwal</em>, <em>Bengaluru</em>) instantly resolve to verified coordinates, run 62-feature physics calculations, stream S-band Doppler radar sweeps, and display +30m, +60m, and +90m timeline predictions.
+            </p>
+          </div>
+          <div style="padding: 18px; background: var(--bg-canvas); border-radius: 12px; border: 1px solid var(--card-border);">
+            <h5 style="font-size: 0.96rem; font-weight: 700; color: var(--accent-terracotta); margin-bottom: 6px;">
+              🛡️ Outside Karnataka Geofence Lock
+            </h5>
+            <p style="font-size: 0.86rem; color: var(--text-secondary); line-height: 1.5;">
+              Queries for places outside Karnataka (e.g., <em>Goa</em>, <em>Sikkim</em>, <em>Andhra Pradesh</em>, <em>Mumbai</em>) are identified and isolated. The map flies to their true geographic location, but nowcast predictions and weather cards are locked to prevent misleading non-Karnataka weather inferences.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Bottom Action Banner -->
+      <div style="text-align: center; padding: 30px 20px;">
+        <h4 style="font-size: 1.25rem; font-weight: 800; color: var(--text-primary); margin-bottom: 12px;">
+          Experience Live Convective Nowcasting
+        </h4>
+        <a href="/" class="nav-about-btn" style="padding: 12px 28px; font-size: 0.95rem; background: var(--accent-terracotta); color: #fff; border: none; box-shadow: 0 4px 14px rgba(200, 109, 81, 0.3);">
+          ⚡ Open AeroCast AI Live Dashboard
+        </a>
+      </div>
+
+    </main>
+
+  </div>
+
+  <script>
+    // Theme toggle handling
+    function setAppTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      document.body.setAttribute('data-theme', theme);
+      localStorage.setItem('aerocast_theme', theme);
+      var btnLight = document.getElementById('btnLight');
+      var btnDark = document.getElementById('btnDark');
+      if (btnLight && btnDark) {
+        btnLight.classList.toggle('active', theme === 'light');
+        btnDark.classList.toggle('active', theme === 'dark');
+      }
+    }
+
+    // Initialize saved theme on load
+    (function() {
+      var savedTheme = localStorage.getItem('aerocast_theme') || 'light';
+      setAppTheme(savedTheme);
+    })();
+  </script>
+</body>
+</html>
+

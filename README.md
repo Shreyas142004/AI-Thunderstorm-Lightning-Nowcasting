@@ -112,7 +112,8 @@ D:\Projects\Major-Project\
 │       └── leaflet.js              # Leaflet GIS Interactive Mapping Engine
 │
 ├── templates/
-│   └── index.html                  # Responsive Convective Weather Dashboard Template
+│   ├── index.html                  # Responsive Convective Weather Dashboard Template
+│   └── about.html                  # Physics Parameters & Meteorological Concepts Guide
 │
 └── report/
     ├── AeroCast_AI_Report.tex      # Academic Project Report (LaTeX Source, 25 Papers Surveyed)

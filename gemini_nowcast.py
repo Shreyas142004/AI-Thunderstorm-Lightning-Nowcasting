@@ -296,7 +296,7 @@ def _call_gemini_prediction_engine(
     zones_input: List[Dict[str, Any]]
 ) -> Optional[Dict[str, Any]]:
     """Calls Gemini API with strict structured JSON schema."""
-    prompt = f"""You are AeroCast AI's Chief Meteorological Scientist specializing in tropical convective nowcasting and boundary-layer thermodynamics across Karnataka, India.
+    prompt = f"""You are AeroCast AI's weather advisor for Karnataka, India.
 
 Your mission is to predict the ACCURATE weather state and CONVECTIVE STORM / THUNDERSTORM RISK PROBABILITY for:
 Location: {location}
@@ -305,7 +305,7 @@ Local Time: {telemetry.get('local_time')}
 LIVE REAL-TIME TELEMETRY:
 - Temperature: {telemetry.get('temp')}°C
 - Dew Point: {telemetry.get('dew')}°C
-- Dew Point Depression (DPD = T - Td): {telemetry.get('dpd')}°C (near-surface saturation indicator)
+- Dew Point Depression (DPD = T - Td): {telemetry.get('dpd')}°C
 - Relative Humidity: {telemetry.get('humidity')}%
 - Vapor Pressure Deficit (VPD): {telemetry.get('vpd')} hPa
 - Cloud Cover: {telemetry.get('cloudcover')}%
@@ -317,18 +317,28 @@ HISTORICAL KARNATAKA DATASET CLIMATOLOGY (karnataka_dataset.xlsx, 9,862 records)
 - Current Month Baseline Rain/Storm Frequency: {physics.get('monthly_baseline_pct')}%
 - Dataset Storm Day Norms: Dew Point ~19.8°C, Humidity ~78.8%, Cloud Cover ~72.5%
 - Dataset Fair Day Norms: Dew Point ~15.9°C, Humidity ~64.6%, Cloud Cover ~44.3%
-- Diurnal Convective Heating Factor: {physics.get('diurnal_factor')} (1.25 = afternoon peak, 0.42 = night nocturnal inversion)
+- Diurnal Convective Heating Factor: {physics.get('diurnal_factor')} (1.25 = afternoon peak, 0.42 = night nocturnal cooling)
 - Dataset Physics Prior Probability: {physics.get('calibrated_prob')}%
 - Gradient Boosted ML Prior: {ml_prob}%
 
 IMPORTANT METEOROLOGICAL RULES:
-1. Nocturnal Radiational Inversion: During late night / early morning, high humidity (>85%) with low DPD (<2°C) in coastal or valley areas (like Dakshina Kannada / Western Ghats) is normal boundary-layer pooling (mist/dew), NOT severe convection, unless cloud cover exceeds 80% with falling pressure. Keep probability reasonable (< 35% if low/medium clouds).
-2. Continuous Realistic Calibration: Avoid extreme binary 0% or 100% unless an active supercell is verified. Typical low-risk is 10-30%, moderate watch is 35-65%, severe storm alert is 70-95%.
+1. Nocturnal Radiational Inversion: During late night / early morning, high humidity (>85%) with low DPD (<2°C) in coastal or valley areas (like Dakshina Kannada / Western Ghats) is normal cooling and morning dew/mist, NOT a thunderstorm, unless cloud cover exceeds 80% with falling pressure. Keep probability low (< 35% if low/medium clouds).
+2. Continuous Realistic Calibration: Avoid extreme 0% or 100%. Typical low-risk is 10-30%, moderate watch is 35-65%, severe storm alert is 70-95%.
 3. User Risk Color Scheme:
    - Probability < 35%: Risk "FAIR WEATHER / LOW RISK", Alert Code "GREEN"
    - Probability 35% - 69.9%: Risk "MODERATE CONVECTIVE WATCH", Alert Code "YELLOW"
    - Probability >= 70%: Risk "CRITICAL CONVECTIVE ALERT", Alert Code "RED"
 4. Timeline Progression: Compute realistic probability and condition for +30m, +60m, +90m. The alert code for each minute card MUST match its individual probability (GREEN if <35%, YELLOW if 35-69.9%, RED if >=70%).
+
+CRITICAL WRITING STYLE INSTRUCTIONS (VERY IMPORTANT):
+- Write ALL bulletin texts and sector advisories in VERY SIMPLE, PLAIN, EASY-TO-UNDERSTAND ENGLISH so that ANYONE (farmers, drivers, students, villagers) can read it without confusion.
+- DO NOT use heavy, complicated technical jargon like "stable boundary-layer conditions", "insolation-driven convective heating", "nocturnal radiational inversion", "near-surface saturation indicator", "diurnal factor dropping towards nocturnal inversion", or "vertical development".
+- Use everyday words instead:
+  - Say "The weather is calm and the sky is clear" instead of "stable boundary-layer conditions".
+  - Say "High humidity tonight is just natural dew and mist; it will NOT cause a thunderstorm" instead of "reflects nocturnal boundary-layer moisture pooling rather than active convective initiation".
+  - Say "Roads are dry and safe" instead of "Road surfaces remain in an uncompromised traction envelope".
+  - Say "No lightning or heavy storm winds" instead of "convective wind shear and electro-dynamic discharge hazards are absent".
+- Keep every advisory concise (2 to 3 sentences maximum), friendly, and direct.
 
 TIMELINE STEPS TO PREDICT:
 {json.dumps(timeline_inputs, indent=2)}
@@ -339,7 +349,7 @@ SUB-ZONES TO PREDICT:
 Respond ONLY with valid JSON with this exact structure:
 {{
   "convective_probability": <float 0-100>,
-  "weather_condition": <concise accurate condition e.g. "Partly Cloudy / Humid Valley Inversion" or "Scattered Convective Showers">,
+  "weather_condition": <concise plain condition e.g. "Clear & Mild" or "Partly Cloudy" or "Passing Rain Showers">,
   "risk_level": <"FAIR WEATHER / LOW RISK" or "MODERATE CONVECTIVE WATCH" or "CRITICAL CONVECTIVE ALERT">,
   "alert_code": <"GREEN" or "YELLOW" or "RED">,
   "timeline": [
@@ -351,7 +361,7 @@ Respond ONLY with valid JSON with this exact structure:
       "humidity": <float>,
       "cloudcover": <float>,
       "windspeed": <float>,
-      "conditions": <string>,
+      "conditions": <string in simple English>,
       "probability": <float 0-100>,
       "risk_level": <string>,
       "alert_code": <"GREEN" or "YELLOW" or "RED">
@@ -366,10 +376,10 @@ Respond ONLY with valid JSON with this exact structure:
       "alert_code": <"GREEN" or "YELLOW" or "RED">
     }}
   ],
-  "synoptic_bulletin": <expert meteorological synthesis of thermodynamics, DPD, insolation, and dataset norms>,
-  "agriculture_advisory": <actionable crop & field guidance for Karnataka farmers>,
-  "travel_safety_advisory": <road surface, Ghat passes, and transit safety>,
-  "aviation_outdoor_warning": <wind shear, lightning safety, and outdoor guidelines>
+  "synoptic_bulletin": <short 2-3 sentence overview in simple everyday English explaining current weather and if storm is expected>,
+  "agriculture_advisory": <short simple advice for farmers: crop drying, harvesting, or covering produce>,
+  "travel_safety_advisory": <short simple driving tips: road grip, visibility, safe driving speeds>,
+  "aviation_outdoor_warning": <short simple advice for outdoor activities, lightning safety, and wind conditions>
 }}
 """
 
@@ -494,12 +504,31 @@ def _build_dataset_physics_fallback(
             "alert_code": _get_alert_code(zprob)
         })
 
-    bulletin = (
-        f"Thermodynamic equilibrium evaluation grounded in the 27-year Karnataka meteorological dataset indicates "
-        f"near-surface Dew Point Depression of {physics['dpd']}°C and Vapor Pressure Deficit of {physics['vpd']} hPa. "
-        f"With diurnal insolation factor at {physics['diurnal_factor']}, vertical convective development remains "
-        f"{'elevated' if prob >= 50 else 'moderate to suppressed'} across the district."
-    )
+    if prob < 35.0:
+        bulletin = (
+            f"The weather in {location} is calm with {'clear skies' if clouds < 30 else 'gentle clouds'}. "
+            f"Temperature is {weather_data.get('temp', 27)}°C with comfortable winds. "
+            f"{'High moisture tonight is just natural dew and mist; there is no thunderstorm risk.' if physics.get('diurnal_factor', 1) < 0.7 else 'No storm or rain is expected soon.'}"
+        )
+        agri = f"Great weather for farming in {location}. Safe to dry crops like areca nut and rubber. No rain protection needed."
+        travel = "Roads are clear and dry with good visibility. Safe driving conditions on local routes and Ghat roads."
+        outdoor = "Safe for outdoor activities and travel. No lightning or heavy storm winds detected."
+    elif prob < 70.0:
+        bulletin = (
+            f"Clouds are building up over {location} with temperature around {weather_data.get('temp', 28)}°C. "
+            f"There is a moderate chance of localized rain or brief thunderstorms within the next hour."
+        )
+        agri = f"Farmers in {location} should keep harvested crops covered or ready to move indoors in case showers develop."
+        travel = "Watch out for wet road patches and sudden rain. Reduce speed on winding Ghat turns."
+        outdoor = "Keep an eye on the sky. Head indoors if dark storm clouds gather or thunder is heard."
+    else:
+        bulletin = (
+            f"Severe thunderstorm alert for {location}! Heavy storm clouds are active with temperature near {weather_data.get('temp', 29)}°C. "
+            f"Strong gusty winds, heavy rainfall, and lightning strikes are very likely within 30 to 60 minutes."
+        )
+        agri = f"Urgent for {location} farmers: Immediately secure all harvested crops, pause rubber tapping, and check field drainage."
+        travel = "Hazardous road conditions. Heavy rain, slick roads, and poor visibility. Avoid Ghat road travel if possible."
+        outdoor = "Danger of lightning strikes and strong wind gusts! Stay indoors immediately and avoid trees or metal poles."
 
     return {
         "status": "dataset_physics_ensemble",
@@ -511,9 +540,9 @@ def _build_dataset_physics_fallback(
         "timeline": timeline,
         "micro_zones": micro_zones,
         "synoptic_bulletin": bulletin,
-        "agriculture_advisory": "Standard agricultural routine. Monitor local cloud thickness before evening harvesting or spraying.",
-        "travel_safety_advisory": "Road visibility is standard. Maintain moderate speeds during early morning mist or sudden showers.",
-        "aviation_outdoor_warning": "No severe upper-level convective squalls detected in the local radius."
+        "agriculture_advisory": agri,
+        "travel_safety_advisory": travel,
+        "aviation_outdoor_warning": outdoor
     }
 
 

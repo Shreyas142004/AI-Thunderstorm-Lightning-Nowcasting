@@ -29,8 +29,20 @@
       }
     })();
   </script>
+  <script>
+    (function() {
+      var savedTheme = localStorage.getItem('aerocast_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
 </head>
 <body data-theme="light">
+  <script>
+    (function() {
+      var savedTheme = localStorage.getItem('aerocast_theme') || 'light';
+      document.body.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
 
   <div class="app-wrapper">
 
@@ -215,6 +227,14 @@
             <span>Espresso</span>
           </button>
         </div>
+
+        <!-- About Project Navigation Button -->
+        <a href="/about" class="nav-about-btn" title="Learn about AeroCast AI & Atmospheric Physics Parameters">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+          <span>About Project</span>
+        </a>
       </div>
     </header>
 
@@ -254,14 +274,14 @@
             </div>
           </div>
 
-          <div id="riskAlertBanner" class="risk-alert-pill alert-red">
-            <span class="pulse-indicator"></span>
-            <span id="riskAlertText">FETCHING REAL-TIME OBSERVATIONS...</span>
+          <div id="riskAlertBanner" class="risk-alert-pill alert-idle">
+            <span class="pulse-indicator" style="background: var(--accent-sage);"></span>
+            <span id="riskAlertText">READY • ENTER A PLACE TO NOWCAST</span>
           </div>
 
           <div class="resolved-location-sub">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
-            <span id="resolvedAddressText">Locating Karnataka Observatory...</span>
+            <span id="resolvedAddressText">Search any Karnataka village or city above and click Predict</span>
           </div>
         </div>
 
@@ -534,7 +554,7 @@
 
           <div class="gemini-content-body">
             <p id="geminiBulletinText" class="gemini-bulletin">
-              Analyzing atmospheric boundary-layer instability, moisture flux convergence, and barometric depression over Karnataka...
+              Type any Karnataka location above and click "Predict" to see the live weather, thunderstorm risk, and simple daily safety advice.
             </p>
 
             <div class="gemini-sectors-grid">

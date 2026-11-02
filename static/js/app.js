@@ -184,6 +184,14 @@ function initRadarMap() {
     setTimeout(() => {
       if (radarMap) radarMap.invalidateSize();
     }, 200);
+
+    // Automatic mobile orientation & resize adaptation
+    window.addEventListener('resize', () => {
+      if (radarMap) radarMap.invalidateSize();
+    }, { passive: true });
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => { if (radarMap) radarMap.invalidateSize(); }, 250);
+    }, { passive: true });
   } catch (err) {
     console.error("Error creating Leaflet radar map:", err);
   }
@@ -1154,16 +1162,9 @@ function renderPlacesDetails(data) {
       </div>
     `;
 
-    // Click to highlight, pan radar, and open detailed prediction pop-up window
+    // Click to open detailed 30, 60, 90 mins prediction pop-up window (keeps main weather intact)
     row.addEventListener('click', (e) => {
       e.stopPropagation();
-      if (radarMap) {
-        const destLat = zone.lat || data.latitude;
-        const destLon = zone.lon || data.longitude;
-        if (destLat && destLon) {
-          radarMap.flyTo([destLat, destLon], 13.5, { duration: 0.7 });
-        }
-      }
       document.querySelectorAll('.place-item-card.active').forEach(el => el.classList.remove('active'));
       row.classList.add('active');
       openMicrozoneModal(zone, data);
@@ -1339,11 +1340,25 @@ function openMicrozoneModal(zone, data) {
 
 /**
  * Close Micro-Zone Pop-Up Window
+ * Ensures main dashboard telemetry, timeline, and radar remain on primary location
  */
 function closeMicrozoneModal() {
   const modal = document.getElementById('microzoneModal');
   if (modal) modal.style.display = 'none';
   document.body.style.overflow = '';
+
+  // Remove active highlight from microzone cards in the list
+  document.querySelectorAll('.place-item-card.active').forEach(el => el.classList.remove('active'));
+
+  // Ensure radar map view remains centered on the main searched location
+  if (lastRenderedData && radarMap && lastRenderedData.latitude && lastRenderedData.longitude) {
+    radarMap.flyTo([lastRenderedData.latitude, lastRenderedData.longitude], 12, { duration: 0.5 });
+  }
+
+  // Ensure timeline track remains on the primary observatory forecast
+  if (typeof resetTimelineTrack === 'function') {
+    resetTimelineTrack();
+  }
 }
 
 /**

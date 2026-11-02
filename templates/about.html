@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
   
   <!-- Stylesheet -->
-  <link rel="stylesheet" id="aerocastCss" href="/static/css/style.css?v=pill_bajpe_v27">
+  <link rel="stylesheet" id="aerocastCss" href="/static/css/style.css?v=about_overflow_v33">
   <script>
     (function() {
       var savedTheme = localStorage.getItem('aerocast_theme') || 'light';
@@ -225,11 +225,11 @@
       </section>
 
       <!-- SECTION 2: Core Thermodynamic Parameters Explained -->
-      <div style="margin-bottom: 18px;">
-        <h3 style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-bottom: 6px; font-family: 'Space Grotesk', sans-serif;">
+      <div class="about-section-header">
+        <h3 class="about-section-heading">
           🔬 Core Atmospheric Parameters Explained
         </h3>
-        <p style="font-size: 0.95rem; color: var(--text-secondary);">
+        <p class="about-section-desc">
           Discover how each meteorological variable is measured, why it governs convective storm physics, and how AeroCast AI calculates them.
         </p>
       </div>
@@ -459,7 +459,7 @@
           <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 10px;">
             Tropical thunderstorms are heat-engine phenomena triggered by solar insolation. In Karnataka, surface heating peaks in the early afternoon, generating intense thermal updrafts. AeroCast AI applies a physics-based diurnal factor:
           </p>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; font-size: 0.84rem;">
+          <div class="diurnal-factors-grid">
             <div style="padding: 10px; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--card-border);">
               <strong style="color: var(--accent-terracotta);">13:00 – 18:00 IST (D<sub>f</sub> = 1.25)</strong><br>
               <span style="color: var(--text-muted);">Afternoon Thermal Convective Peak</span>
@@ -552,7 +552,7 @@
     })();
   </script>
   <!-- Real-time Thunderstorm Alert Broadcast Listener for All Users -->
-  <script src="/static/js/alerts_listener.js?v=pill_bajpe_v27"></script>
+  <script src="/static/js/alerts_listener.js?v=about_overflow_v33"></script>
 </body>
 </html>
 

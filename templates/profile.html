@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" id="aerocastCss" href="/static/css/style.css?v=pill_bajpe_v27">
+  <link rel="stylesheet" id="aerocastCss" href="/static/css/style.css?v=about_overflow_v33">
   <script>
     (function() {
       var savedTheme = localStorage.getItem('aerocast_theme') || 'light';
@@ -184,15 +184,15 @@
           </div>
 
           <!-- Step 1: Request Mobile OTP -->
-          <form id="mobileOtpReqForm" onsubmit="handleMobileOtpRequest(event)">
-            <div class="form-group">
-              <label for="profNewMobile" class="form-label">New 10-Digit Mobile Number (+91)</label>
+          <form id="mobileOtpReqForm" onsubmit="handleMobileOtpRequest(event)" style="margin-top: 14px;">
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label for="profNewMobile" class="form-label" style="display: block; margin-bottom: 6px; line-height: 1.4;">New 10-Digit Mobile Number (+91)</label>
               <div class="form-input-wrap">
                 <input type="tel" id="profNewMobile" class="form-input" placeholder="e.g. 9845012345" pattern="[0-9]{10}" maxlength="10" required>
               </div>
             </div>
 
-            <button type="submit" id="btnSendMobileOtp" class="auth-demo-btn" style="width: 100%; margin-bottom: 12px;">
+            <button type="submit" id="btnSendMobileOtp" class="auth-submit-btn" style="width: 100%; margin-top: 10px; margin-bottom: 12px;">
               <span>📨 Send OTP to Verify Mobile Number</span>
             </button>
           </form>
@@ -235,7 +235,7 @@
             <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 16px;">
               To change your password, click below. A secure 6-digit one-time code will be dispatched to <strong>{{ user.email }}</strong>.
             </p>
-            <button type="button" id="btnSendPwdOtp" class="auth-demo-btn" onclick="handlePasswordOtpRequest()" style="width: 100%;">
+            <button type="button" id="btnSendPwdOtp" class="auth-submit-btn" onclick="handlePasswordOtpRequest()" style="width: 100%; margin-top: 10px;">
               <span>📧 Send Password Change OTP to My Email</span>
             </button>
           </div>
@@ -546,7 +546,7 @@
     }
   </script>
   <!-- Real-time Thunderstorm Alert Broadcast Listener for All Users -->
-  <script src="/static/js/alerts_listener.js?v=pill_bajpe_v27"></script>
+  <script src="/static/js/alerts_listener.js?v=about_overflow_v33"></script>
 </body>
 </html>
 

@@ -1011,61 +1011,81 @@ body {
 }
 
 .microzone-modal-header {
-  padding: 16px 22px;
+  padding: 14px 18px;
   border-bottom: 1px solid var(--card-border);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 12px;
   background: var(--bg-canvas);
 }
 
 .mzm-header-title-box {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
+  flex: 1 1 auto;
   min-width: 0;
 }
 
 .mzm-header-icon {
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   line-height: 1;
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   border-radius: 10px;
   background: var(--accent-terracotta-bg);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.mzm-title-text-wrap {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .microzone-modal-heading {
-  font-size: 1.12rem;
+  font-size: 1.08rem;
   font-weight: 800;
   color: var(--text-primary);
   margin: 0;
   letter-spacing: -0.01em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.3;
 }
 
 .microzone-modal-subheading {
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   color: var(--text-muted);
-  margin: 2px 0 0;
+  margin: 3px 0 0;
   font-weight: 600;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.35;
 }
 
 .microzone-modal-close {
   background: transparent;
   border: none;
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   color: var(--text-muted);
   cursor: pointer;
   line-height: 1;
-  padding: 4px 8px;
+  padding: 0;
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-left: 6px;
   transition: all 0.15s ease;
 }
 
@@ -2280,9 +2300,15 @@ body[data-theme="dark"] .loading-screen-overlay {
 }
 
 .about-page-container {
+  width: 100%;
   max-width: 1240px;
+  min-width: 0;
   margin: 0 auto;
-  padding: 24px 20px 60px;
+  padding: 10px 0 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-sizing: border-box;
 }
 
 .about-hero {
@@ -2290,10 +2316,14 @@ body[data-theme="dark"] .loading-screen-overlay {
   border: 1px solid var(--card-border);
   border-radius: 20px;
   padding: 36px 32px;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
   box-shadow: var(--card-shadow);
   position: relative;
   overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .about-hero::before {
@@ -3000,23 +3030,28 @@ body[data-theme="dark"] .loading-screen-overlay {
 }
 
 .form-btn-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto;
   gap: 10px;
-  align-items: stretch;
+  align-items: center;
   width: 100%;
-  margin-top: 10px;
+  margin-top: 12px;
   box-sizing: border-box;
 }
 
 .form-btn-row .auth-submit-btn {
-  flex: 1;
+  flex: initial;
   margin-top: 0;
-  width: auto;
+  width: 100%;
+  height: 46px;
+  padding: 0 16px;
   white-space: nowrap;
+  box-sizing: border-box;
 }
 
 .auth-cancel-btn {
-  padding: 13px 22px;
+  height: 46px;
+  padding: 0 20px;
   border-radius: 14px;
   border: 1px solid var(--card-border);
   background: var(--toggle-bg);
@@ -3030,7 +3065,7 @@ body[data-theme="dark"] .loading-screen-overlay {
   align-items: center;
   justify-content: center;
   white-space: nowrap;
-  flex: 0 0 auto;
+  flex: initial;
   min-width: 90px;
   box-sizing: border-box;
 }
@@ -5265,4 +5300,1177 @@ body[data-theme="dark"] .loading-screen-overlay {
   background: #b71c1c;
   transform: translateY(-1px);
   box-shadow: 0 6px 14px rgba(200, 109, 81, 0.35);
+}
+
+
+/* ==========================================================================
+   AeroCast AI — Comprehensive Mobile & Tablet Responsive Engine
+   Breakpoints:
+   - 991px: Medium Tablet & Dual Column Stack
+   - 768px: Mobile Landscape & Standard Smartphones
+   - 480px: Compact Smartphones (iPhone 14/15, Galaxy S, Pixel)
+   - 360px: Ultra-Compact Devices (iPhone SE, Small Androids)
+   ========================================================================== */
+
+/* 1. Global Viewport & Base Canvas Rules */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+@media (max-width: 991px) {
+  body {
+    padding: 16px 20px 32px;
+  }
+  .app-wrapper {
+    gap: 16px;
+  }
+  .main-dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .radar-flex-container {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .radar-places-panel {
+    height: auto;
+    max-height: 380px;
+  }
+}
+
+@media (max-width: 768px) {
+  body {
+    padding: 12px 14px 28px;
+  }
+
+  .app-wrapper {
+    gap: 14px;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* Cards */
+  .card {
+    padding: 16px 14px;
+    border-radius: 18px;
+  }
+
+  /* Hero Concentric Dial Card */
+  .risk-hero-card {
+    padding: 18px 14px 16px;
+    border-radius: 18px;
+  }
+
+  .dial-container {
+    margin: 4px 0 12px;
+    max-width: 100%;
+  }
+
+  /* Telemetry Grid (2 Columns on mobile, well-proportioned) */
+  .telemetry-stack-grid {
+    gap: 10px;
+  }
+
+  .telemetry-card {
+    padding: 13px 12px;
+    border-radius: 14px;
+  }
+
+  .telemetry-number {
+    font-size: 1.45rem;
+    margin: 4px 0 2px;
+  }
+
+  .telemetry-label {
+    font-size: 0.70rem;
+  }
+
+  .telemetry-sub {
+    font-size: 0.68rem;
+  }
+
+  /* Interactive Radar Map & Header */
+  .radar-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .radar-subtext {
+    display: block;
+    margin-left: 0;
+    margin-top: 3px;
+    font-size: 0.72rem;
+  }
+
+  .radar-meta-group {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .radar-map-viewport {
+    height: 310px;
+    border-radius: 14px;
+  }
+
+  .radar-places-panel {
+    height: auto;
+    max-height: 350px;
+    padding: 14px 12px;
+    border-radius: 16px;
+  }
+
+  /* Timeline Nowcasting Track (Vertical Stacking for Mobile) */
+  .timeline-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .timeline-subtext {
+    display: block;
+    margin-left: 0;
+    margin-top: 2px;
+    font-size: 0.74rem;
+  }
+
+  .timeline-indicator-pill {
+    align-self: flex-start;
+    font-size: 0.70rem;
+    padding: 3px 10px;
+  }
+
+  .timeline-reset-btn {
+    margin-top: 4px;
+  }
+
+  .timeline-stepper-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .step-card {
+    width: 100%;
+    padding: 13px 15px;
+    border-radius: 14px;
+    box-sizing: border-box;
+  }
+
+  .step-flow-arrow {
+    transform: rotate(90deg);
+    margin: 2px auto;
+    opacity: 0.85;
+  }
+
+  .step-body {
+    gap: 12px;
+  }
+
+  .step-icon-box {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+  }
+
+  .step-temp-text {
+    font-size: 1.15rem;
+  }
+
+  .step-condition-text {
+    font-size: 0.80rem;
+  }
+
+  .step-metrics {
+    font-size: 0.72rem;
+  }
+
+  .step-footer-pill {
+    font-size: 0.70rem;
+    padding: 4px 10px;
+  }
+
+  /* Gemini Advisory */
+  .gemini-advisory-card {
+    padding: 16px 14px;
+    border-radius: 18px;
+  }
+
+  .gemini-bulletin {
+    padding: 12px 14px;
+    font-size: 0.84rem;
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+
+  .gemini-sectors-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .sector-tile {
+    padding: 12px 14px;
+    border-radius: 12px;
+  }
+
+  .sector-text {
+    font-size: 0.82rem;
+  }
+
+  /* In-Dashboard Thunderstorm Alert Banner */
+  .thunderstorm-alert-panel {
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 14px;
+  }
+
+  .alert-action-row {
+    width: 100%;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .alert-view-map-btn,
+  .alert-broadcast-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Out of Bounds Warning Banner */
+  .out-of-bounds-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+
+  .warning-banner-actions {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  /* Floating Toast Alert */
+  .storm-toast-notification {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    width: auto;
+    max-width: none;
+    padding: 12px 14px;
+    border-radius: 14px;
+  }
+
+  .toast-action-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .toast-action-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Modals: Micro-Zone Prediction & Alert Dispatch */
+  .microzone-modal-backdrop,
+  .notif-modal-backdrop {
+    padding: 10px;
+  }
+
+  .microzone-modal-card,
+  .notif-modal-card {
+    border-radius: 18px;
+    max-height: 94vh;
+    width: 100%;
+  }
+
+  .microzone-modal-header,
+  .notif-modal-header {
+    padding: 12px 14px;
+  }
+
+  .microzone-modal-heading,
+  .notif-modal-heading {
+    font-size: 1rem;
+  }
+
+  .microzone-modal-subheading,
+  .notif-modal-subheading {
+    font-size: 0.70rem;
+  }
+
+  .mzm-header-icon,
+  .notif-header-icon {
+    width: 34px;
+    height: 34px;
+    font-size: 1.25rem;
+    border-radius: 8px;
+  }
+
+  .microzone-modal-body,
+  .notif-modal-body {
+    padding: 14px 12px;
+    gap: 12px;
+  }
+
+  .mzm-steps-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .mzm-step-card-full {
+    padding: 12px;
+    border-radius: 12px;
+    gap: 8px;
+  }
+
+  .mzm-step-big-prob {
+    font-size: 1.35rem;
+  }
+
+  .mzm-step-condition {
+    font-size: 0.72rem;
+    min-height: auto;
+    padding: 6px 8px;
+  }
+
+  .microzone-modal-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 12px 14px;
+  }
+
+  .mzm-action-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 9px 12px;
+    font-size: 0.76rem;
+  }
+
+  .notif-action-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .btn-broadcast-now,
+  .btn-view-history {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* 3. Small / Compact Phones (iPhone 14/15, Galaxy S, Pixel <= 480px) */
+@media (max-width: 480px) {
+  body {
+    padding: 8px 10px 20px;
+  }
+
+  .app-wrapper {
+    gap: 12px;
+  }
+
+  /* Form inputs font-size at least 16px to prevent iOS auto-zoom on focus */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  .location-search-wrapper {
+    height: 38px;
+    padding: 2px 4px 2px 8px;
+  }
+
+  .location-search-input {
+    font-size: 16px !important;
+    min-width: 0;
+  }
+
+  .location-search-input::placeholder {
+    font-size: 0.75rem;
+    text-overflow: ellipsis;
+  }
+
+  .card {
+    padding: 14px 11px;
+    border-radius: 16px;
+  }
+
+  .card-heading {
+    font-size: 0.98rem;
+  }
+
+  .dial-container {
+    transform: scale(0.95);
+    transform-origin: center bottom;
+    margin: 2px 0 8px;
+  }
+
+  .dial-prob-number {
+    font-size: 2.5rem;
+  }
+
+  .dial-prob-label {
+    font-size: 0.68rem;
+  }
+
+  .risk-alert-pill {
+    font-size: 0.72rem;
+    padding: 4px 12px;
+  }
+
+  .radar-map-viewport {
+    height: 270px;
+    border-radius: 12px;
+  }
+
+  .radar-legend-card {
+    min-width: 140px;
+    padding: 5px 8px;
+    bottom: 8px;
+    right: 8px;
+  }
+
+  .radar-legend-title {
+    font-size: 0.64rem;
+  }
+
+  .radar-legend-bar {
+    height: 5px;
+  }
+
+  .radar-legend-labels span {
+    font-size: 0.60rem;
+  }
+
+  /* Places panel */
+  .places-panel-title {
+    font-size: 0.82rem;
+  }
+
+  .places-panel-sub {
+    font-size: 0.68rem;
+  }
+
+  .active-place-name {
+    font-size: 0.78rem;
+  }
+
+  .place-item-name {
+    font-size: 0.74rem;
+  }
+
+  .place-item-sub {
+    font-size: 0.66rem;
+  }
+
+  .place-risk-pill {
+    font-size: 0.68rem;
+    padding: 2px 6px;
+  }
+
+  /* Telemetry metrics */
+  .telemetry-card {
+    padding: 11px 10px;
+  }
+
+  .telemetry-number {
+    font-size: 1.35rem;
+  }
+
+  /* Auth Pages */
+  .auth-page-wrapper {
+    padding: 16px 6px;
+    min-height: auto;
+  }
+
+  .auth-card {
+    padding: 22px 16px;
+    border-radius: 18px;
+    max-width: 100%;
+  }
+
+  .auth-title {
+    font-size: 1.25rem;
+  }
+
+  .auth-subtitle {
+    font-size: 0.78rem;
+  }
+
+  .form-control {
+    font-size: 16px !important;
+    padding: 10px 12px;
+  }
+
+  .auth-btn {
+    padding: 11px;
+    font-size: 0.85rem;
+  }
+
+  /* History Page */
+  .history-page-container {
+    padding: 10px 4px 30px;
+  }
+
+  .history-hero-card {
+    padding: 14px 12px;
+    border-radius: 16px;
+  }
+
+  .history-stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .history-stat-box {
+    padding: 10px 8px;
+  }
+
+  .history-stat-num {
+    font-size: 1.25rem;
+  }
+
+  .history-stat-label {
+    font-size: 0.68rem;
+  }
+
+  .history-item-card {
+    padding: 12px 10px;
+    border-radius: 14px;
+  }
+
+  .history-telemetry-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  /* Profile Page */
+  .profile-page-container {
+    padding: 10px 4px 30px;
+  }
+
+  .profile-hero-card {
+    padding: 14px 10px;
+    border-radius: 16px;
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .profile-hero-avatar {
+    width: 54px;
+    height: 54px;
+    font-size: 1.5rem;
+  }
+
+  .profile-hero-name {
+    font-size: 1.2rem;
+  }
+
+  .profile-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .profile-card {
+    padding: 14px 12px;
+    border-radius: 16px;
+  }
+
+  /* About Page */
+  .about-page-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    padding: 0 0 32px !important;
+    box-sizing: border-box !important;
+  }
+
+  .about-hero {
+    padding: 16px 12px;
+    border-radius: 16px;
+  }
+
+  .about-hero-title {
+    font-size: 1.25rem;
+  }
+
+  .concept-card {
+    padding: 14px 12px;
+    border-radius: 14px;
+  }
+
+  .formula-block {
+    padding: 10px 12px;
+    font-size: 0.74rem;
+  }
+}
+
+/* 4. Ultra-Compact Phones (iPhone SE 1st gen, 320px - 360px) */
+@media (max-width: 360px) {
+  body {
+    padding: 6px 6px 16px;
+  }
+
+  .brand-title {
+    font-size: 0.98rem;
+  }
+
+  .nav-about-btn span {
+    display: none; /* Icons only for History/About */
+  }
+
+  .dial-container {
+    transform: scale(0.88);
+    transform-origin: center bottom;
+    margin: 0 0 6px;
+  }
+
+  .telemetry-stack-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .radar-map-viewport {
+    height: 250px;
+  }
+}
+
+
+/* Dedicated Subpage Header Responsiveness & Button Grid Alignment */
+@media (max-width: 580px) {
+  .app-header:not(:has(.nav-search-group)) {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    padding: 10px 12px !important;
+  }
+
+  .app-header:not(:has(.nav-search-group)) .brand {
+    width: 100% !important;
+    justify-content: space-between !important;
+  }
+
+  .app-header:not(:has(.nav-search-group)) .header-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
+
+  /* Compact icon-only badges for subpage navigation - eliminates overflow */
+  .app-header:not(:has(.nav-search-group)) .nav-back-btn span,
+  .app-header:not(:has(.nav-search-group)) .nav-about-btn span {
+    display: none !important;
+  }
+
+  .app-header:not(:has(.nav-search-group)) .nav-back-btn,
+  .app-header:not(:has(.nav-search-group)) .nav-about-btn {
+    padding: 0 !important;
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    justify-content: center !important;
+    border-radius: 10px !important;
+  }
+
+  .app-header:not(:has(.nav-search-group)) .theme-switch-container {
+    height: 34px !important;
+  }
+
+  .app-header:not(:has(.nav-search-group)) .nav-user-icon-btn {
+    width: 34px !important;
+    height: 34px !important;
+  }
+}
+
+@media (max-width: 440px) {
+  .form-btn-row {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+  .form-btn-row .auth-cancel-btn {
+    width: 100% !important;
+  }
+}
+
+
+/* ==========================================================================
+   AeroCast AI — Comprehensive About Page & Modal Responsiveness
+   ========================================================================== */
+
+/* Section Headings & General Elements */
+.about-section-header {
+  margin-bottom: 18px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.about-section-heading {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  font-family: 'Space Grotesk', sans-serif;
+  letter-spacing: -0.01em;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.about-section-desc {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.diurnal-factors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  font-size: 0.84rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.table-scroll-hint {
+  display: none;
+  margin-top: 6px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--accent-terracotta);
+}
+
+/* Microzone Modal Footer (Single Close Button) */
+.microzone-modal-footer {
+  justify-content: flex-end;
+}
+
+.microzone-modal-footer .btn-close-modal {
+  background: var(--toggle-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--card-border);
+  font-weight: 700;
+  padding: 10px 24px;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.microzone-modal-footer .btn-close-modal:hover {
+  background: var(--card-bg);
+  border-color: var(--accent-terracotta);
+  color: var(--accent-terracotta);
+  transform: translateY(-1px);
+}
+
+/* Tablet & Mobile Landscape Breakpoint (<= 860px) */
+@media (max-width: 860px) {
+  .about-page-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 0 36px !important;
+    gap: 16px !important;
+    box-sizing: border-box !important;
+  }
+
+  .about-grid-2col {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .steps-flow-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 14px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
+
+/* Standard Smartphones (<= 600px) */
+@media (max-width: 600px) {
+  .about-page-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 0 30px !important;
+    gap: 12px !important;
+    box-sizing: border-box !important;
+  }
+
+  .table-scroll-hint {
+    display: inline-block;
+  }
+
+  /* All Cards within About page: Strict width and containment */
+  .about-hero,
+  .how-it-works-card,
+  .concept-card,
+  .threshold-table-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  /* Hero Section */
+  .about-hero {
+    padding: 16px 14px !important;
+    border-radius: 18px !important;
+    margin-bottom: 0 !important;
+  }
+
+  .about-hero-title {
+    font-size: 1.35rem !important;
+    line-height: 1.3 !important;
+    margin-bottom: 8px !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+
+  .about-hero-desc {
+    font-size: 0.85rem !important;
+    line-height: 1.55 !important;
+    margin-bottom: 12px !important;
+    max-width: 100% !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+
+  /* Stats Row: 2x2 compact mobile grid */
+  .about-stats-row {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+    padding-top: 12px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .about-stat-box {
+    background: var(--bg-canvas) !important;
+    border: 1px solid var(--card-border) !important;
+    border-radius: 12px !important;
+    padding: 10px 10px !important;
+    gap: 2px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .about-stat-num {
+    font-size: 1.25rem !important;
+    word-break: break-word !important;
+  }
+
+  .about-stat-label {
+    font-size: 0.66rem !important;
+    line-height: 1.3 !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+
+  /* How AeroCast AI Predicts Thunderstorms */
+  .how-it-works-card {
+    padding: 16px 14px !important;
+    border-radius: 18px !important;
+    margin-bottom: 0 !important;
+  }
+
+  .steps-flow-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    margin-top: 12px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .step-flow-box {
+    padding: 14px 12px !important;
+    border-radius: 14px !important;
+    gap: 6px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+
+  .step-flow-title {
+    font-size: 0.95rem !important;
+    word-break: break-word !important;
+  }
+
+  .step-flow-text {
+    font-size: 0.82rem !important;
+    line-height: 1.5 !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+
+  .step-flow-highlight {
+    font-size: 0.72rem !important;
+    padding: 6px 10px !important;
+    border-radius: 8px !important;
+    word-break: break-word !important;
+  }
+
+  /* Section Headings */
+  .about-section-heading {
+    font-size: 1.2rem !important;
+    word-break: break-word !important;
+  }
+
+  .about-section-desc {
+    font-size: 0.82rem !important;
+    word-break: break-word !important;
+  }
+
+  /* Concept Cards (Atmospheric Thermodynamics) */
+  .about-grid-2col {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    margin-bottom: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .concept-card {
+    padding: 16px 14px !important;
+    border-radius: 16px !important;
+    gap: 12px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .concept-card-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+
+  .concept-title-group {
+    align-items: center !important;
+    gap: 10px !important;
+  }
+
+  .concept-icon-avatar {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 1.2rem !important;
+    border-radius: 10px !important;
+  }
+
+  .concept-card-title {
+    font-size: 1.05rem !important;
+    line-height: 1.3 !important;
+    word-break: break-word !important;
+  }
+
+  .concept-card-sub {
+    font-size: 0.72rem !important;
+  }
+
+  .concept-body-text {
+    font-size: 0.84rem !important;
+    line-height: 1.55 !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+
+  /* Formula Block */
+  .formula-card-box {
+    padding: 10px 12px !important;
+    border-radius: 10px !important;
+    font-size: 0.80rem !important;
+    overflow-x: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .formula-code {
+    font-size: 0.82rem !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+
+  .formula-label {
+    font-size: 0.66rem !important;
+  }
+
+  .concept-highlight-item {
+    font-size: 0.80rem !important;
+    line-height: 1.45 !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+
+  .concept-callout-note {
+    font-size: 0.78rem !important;
+    padding: 10px 12px !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+
+  /* Diurnal Factors Grid */
+  .diurnal-factors-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+    font-size: 0.76rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Threshold Matrix Tables */
+  .threshold-table-card {
+    padding: 16px 14px !important;
+    border-radius: 18px !important;
+    margin-bottom: 0 !important;
+    overflow: hidden !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .threshold-table-title {
+    font-size: 1.1rem !important;
+    line-height: 1.35 !important;
+    word-break: break-word !important;
+  }
+
+  .threshold-table-desc {
+    font-size: 0.80rem !important;
+    line-height: 1.45 !important;
+    margin-bottom: 10px !important;
+    word-break: break-word !important;
+  }
+
+  .threshold-table-responsive {
+    border-radius: 10px !important;
+    border: 1px solid var(--card-border) !important;
+    -webkit-overflow-scrolling: touch !important;
+    overflow-x: auto !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .about-matrix-table {
+    min-width: 440px !important;
+    width: 100% !important;
+    font-size: 0.76rem !important;
+  }
+
+  .about-matrix-table th {
+    padding: 8px 10px !important;
+    font-size: 0.72rem !important;
+    white-space: nowrap !important;
+  }
+
+  .about-matrix-table td {
+    padding: 8px 10px !important;
+    font-size: 0.76rem !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Modal Footer on Mobile */
+  .microzone-modal-footer {
+    display: flex;
+    justify-content: center;
+    padding: 12px 14px;
+  }
+
+  .microzone-modal-footer .btn-close-modal {
+    width: 100%;
+    max-width: 260px;
+    justify-content: center;
+  }
+}
+
+/* Ultra-Compact Phones (<= 380px) */
+@media (max-width: 380px) {
+  .about-page-container {
+    padding: 0 0 24px !important;
+    gap: 10px !important;
+  }
+
+  .about-hero {
+    padding: 14px 12px !important;
+  }
+
+  .about-hero-title {
+    font-size: 1.25rem !important;
+  }
+
+  .about-stats-row {
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+  }
+
+  .diurnal-factors-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .concept-card {
+    padding: 14px 12px !important;
+  }
+
+  .about-matrix-table {
+    min-width: 400px !important;
+  }
 }

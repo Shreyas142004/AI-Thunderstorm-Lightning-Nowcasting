@@ -11,6 +11,8 @@ let currentRadarCenter = [12.7667, 75.2016]; // Default Puttur coordinates
 
 const INITIAL_CITY_COORDS = {
   'puttur': [12.7667, 75.2016],
+  'bajpe': [12.9803, 74.8832],
+  'bajipe': [12.9803, 74.8832],
   'mangaluru': [12.9141, 74.8560],
   'mangalore': [12.9141, 74.8560],
   'bengaluru': [12.9716, 77.5946],
@@ -244,18 +246,31 @@ function updateRadarMap(lat, lon, locationName, probability, microZones, isKarna
   const mainDotClass = hasProb
     ? (prob >= 70 ? 'pin-dot-red' : (prob >= 35 ? 'pin-dot-amber' : 'pin-dot-green'))
     : 'pin-dot-neutral';
-  const labelText = hasProb ? `${locationName} (${prob.toFixed(1)}%)` : `${locationName} (Outside KA)`;
+
+  // Format clean, concise place name without redundant duplicate city tokens (e.g. "Bengaluru Urban" instead of "Bengaluru Urban, Bengaluru")
+  function formatPillLocation(rawName) {
+    if (!rawName) return 'Karnataka';
+    const parts = rawName.split(',').map(p => p.trim()).filter(Boolean);
+    if (!parts.length) return rawName;
+    let main = parts[0];
+    // Remove parenthetical noise like "(Airport Zone)" or "(Ct)" for sleek pill display
+    main = main.replace(/\s*\([^)]*\)/g, '').trim();
+    return main || parts[0];
+  }
+
+  const cleanLocName = formatPillLocation(locationName);
+  const labelText = hasProb ? `${cleanLocName} (${prob.toFixed(1)}%)` : `${cleanLocName} (Outside KA)`;
 
   const focalIcon = L.divIcon({
     className: 'leaflet-radar-marker',
     html: `
       <div class="radar-station-blip" style="border: 2px solid ${hasProb && prob >= 70 ? 'var(--accent-terracotta)' : 'var(--card-border)'}; box-shadow: 0 4px 16px rgba(0,0,0,0.25);">
         <span class="pin-dot ${mainDotClass}"></span>
-        <span>${labelText}</span>
+        <span class="blip-text">${labelText}</span>
       </div>
     `,
-    iconSize: [160, 34],
-    iconAnchor: [80, 17]
+    iconSize: null,
+    iconAnchor: null
   });
 
   L.marker([lat, lon], { icon: focalIcon, zIndexOffset: 2000 })
@@ -311,8 +326,8 @@ function updateRadarMap(lat, lon, locationName, probability, microZones, isKarna
             <span class="subzone-prob">${zProb.toFixed(1)}%</span>
           </div>
         `,
-        iconSize: [100, 24],
-        iconAnchor: [50, 12]
+        iconSize: null,
+        iconAnchor: null
       });
 
       L.marker([zLat, zLon], { icon: subIcon, zIndexOffset: 800 })
@@ -1508,7 +1523,7 @@ async function triggerPresentationDemo(scenario) {
         { name: "Surathkal & NITK Coastal Sector", lat: 13.0070, lon: 74.7940, probability: 91.5, temp: 27.8, humidity: 96 },
         { name: "Panambur Port & Industrial Sector", lat: 12.9460, lon: 74.8120, probability: 89.2, temp: 28.1, humidity: 95 },
         { name: "Ullal Coastal Belt & Estuary", lat: 12.8050, lon: 74.8520, probability: 85.0, temp: 28.6, humidity: 93 },
-        { name: "Bajpe Airport & Kavoor Corridor", lat: 12.9280, lon: 74.8720, probability: 87.8, temp: 28.2, humidity: 94 }
+        { name: "Bajpe (Airport Zone & North Taluk)", lat: 12.9803, lon: 74.8832, probability: 87.8, temp: 28.2, humidity: 94 }
       ] : [
         { name: "Puttur Town & Bus Stand (Taluk Centre)", lat: 12.7667, lon: 75.2016, probability: 88.5, temp: 28.8, humidity: 94 },
         { name: "Darbe Commercial Sector", lat: 12.7580, lon: 75.2050, probability: 87.0, temp: 29.0, humidity: 93 },

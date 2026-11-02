@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
   
   <!-- Custom Stylesheet with Universal Loading Fallback -->
-  <link rel="stylesheet" id="aerocastCss" href="/static/css/style.css?v=loc_target_v26">
+  <link rel="stylesheet" id="aerocastCss" href="/static/css/style.css?v=pill_bajpe_v27">
   <!-- Leaflet Map CSS with Fallback -->
   <link rel="stylesheet" id="leafletCss" href="/static/vendor/leaflet.css">
   <script>
@@ -21,10 +21,10 @@
       var path = window.location.pathname || '';
       var isInsideTemplates = path.indexOf('templates') !== -1;
       if (isFile) {
-        document.getElementById('aerocastCss').href = (isInsideTemplates ? '../static/css/style.css' : 'static/css/style.css') + '?v=loc_target_v26';
+        document.getElementById('aerocastCss').href = (isInsideTemplates ? '../static/css/style.css' : 'static/css/style.css') + '?v=pill_bajpe_v27';
         document.getElementById('leafletCss').href = isInsideTemplates ? '../static/vendor/leaflet.css' : 'static/vendor/leaflet.css';
       } else if (isInsideTemplates) {
-        document.getElementById('aerocastCss').href = '../static/css/style.css?v=loc_target_v26';
+        document.getElementById('aerocastCss').href = '../static/css/style.css?v=pill_bajpe_v27';
         document.getElementById('leafletCss').href = '../static/vendor/leaflet.css';
       }
     })();
@@ -196,6 +196,8 @@
             <option value="Sullia">Sullia (Dakshina Kannada)</option>
             <option value="Belthangady">Belthangady (Dakshina Kannada)</option>
             <option value="Mangaluru">Mangaluru / Mangalore (Coastal)</option>
+            <option value="Bajpe">Bajpe (Airport Zone, Mangaluru)</option>
+            <option value="Surathkal">Surathkal (Coastal Hub, Mangaluru)</option>
             <option value="Moodbidri">Moodbidri (Jain Kashi)</option>
             <option value="Kadaba">Kadaba (Ghats Belt)</option>
             <option value="Udupi">Udupi (Temple Town)</option>
@@ -780,11 +782,11 @@
       var isFile = (window.location.protocol === 'file:');
       var path = window.location.pathname || '';
       var isInsideTemplates = path.indexOf('templates') !== -1;
-      var jsSrc = '/static/js/app.js?v=loc_target_v26';
+      var jsSrc = '/static/js/app.js?v=pill_bajpe_v27';
       if (isFile) {
-        jsSrc = (isInsideTemplates ? '../static/js/app.js' : 'static/js/app.js') + '?v=loc_target_v26';
+        jsSrc = (isInsideTemplates ? '../static/js/app.js' : 'static/js/app.js') + '?v=pill_bajpe_v27';
       } else if (isInsideTemplates) {
-        jsSrc = '../static/js/app.js?v=loc_target_v26';
+        jsSrc = '../static/js/app.js?v=pill_bajpe_v27';
       }
       var s = document.createElement('script');
       s.src = jsSrc;
@@ -792,6 +794,6 @@
     })();
   </script>
   <!-- Real-time Thunderstorm Alert Broadcast Listener for All Users -->
-  <script src="/static/js/alerts_listener.js?v=loc_target_v26"></script>
+  <script src="/static/js/alerts_listener.js?v=pill_bajpe_v27"></script>
 </body>
 </html>

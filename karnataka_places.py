@@ -188,6 +188,46 @@ KARNATAKA_DISTRICT_CENTERS = {
     "gokak": {"lat": 16.1667, "lon": 74.8333, "name": "Gokak, Belagavi, Karnataka, India", "admin1": "Karnataka", "district": "Belagavi"},
     "channapatna": {"lat": 12.6517, "lon": 77.2089, "name": "Channapatna, Ramanagara, Karnataka, India", "admin1": "Karnataka", "district": "Ramanagara"},
     "tiptur": {"lat": 13.2556, "lon": 76.4789, "name": "Tiptur, Tumakuru, Karnataka, India", "admin1": "Karnataka", "district": "Tumakuru"},
+    # Mangaluru Taluk Sub-localities & Special Zones (Exact GPS Coordinates)
+    "bajpe": {"lat": 12.9803, "lon": 74.8832, "name": "Bajpe, Mangaluru, Dakshina Kannada, Karnataka, India", "admin1": "Karnataka", "district": "Dakshina Kannada"},
+    "bajipe": {"lat": 12.9803, "lon": 74.8832, "name": "Bajpe, Mangaluru, Dakshina Kannada, Karnataka, India", "admin1": "Karnataka", "district": "Dakshina Kannada"},
+    "bajpe airport": {"lat": 12.9613, "lon": 74.8901, "name": "Mangaluru International Airport (Bajpe), Karnataka, India", "admin1": "Karnataka", "district": "Dakshina Kannada"},
+    "mangalore airport": {"lat": 12.9613, "lon": 74.8901, "name": "Mangaluru International Airport (Bajpe), Karnataka, India", "admin1": "Karnataka", "district": "Dakshina Kannada"},
+    "kavoor": {"lat": 12.9280, "lon": 74.8720, "name": "Kavoor, Mangaluru, Dakshina Kannada, Karnataka, India", "admin1": "Karnataka", "district": "Dakshina Kannada"},
+    "surathkal": {"lat": 13.0070, "lon": 74.7940, "name": "Surathkal, Mangaluru, Dakshina Kannada, Karnataka, India", "admin1": "Karnataka", "district": "Dakshina Kannada"},
+    "panambur": {"lat": 12.9460, "lon": 74.8120, "name": "Panambur, Mangaluru, Dakshina Kannada, Karnataka, India", "admin1": "Karnataka", "district": "Dakshina Kannada"},
+    "ullal": {"lat": 12.8050, "lon": 74.8520, "name": "Ullal, Mangaluru, Dakshina Kannada, Karnataka, India", "admin1": "Karnataka", "district": "Dakshina Kannada"},
+    "kadri": {"lat": 12.8830, "lon": 74.8620, "name": "Kadri, Mangaluru, Dakshina Kannada, Karnataka, India", "admin1": "Karnataka", "district": "Dakshina Kannada"},
+    "hampankatta": {"lat": 12.8700, "lon": 74.8430, "name": "Hampankatta, Mangaluru, Dakshina Kannada, Karnataka, India", "admin1": "Karnataka", "district": "Dakshina Kannada"},
+    "kankanady": {"lat": 12.8640, "lon": 74.8680, "name": "Kankanady, Mangaluru, Dakshina Kannada, Karnataka, India", "admin1": "Karnataka", "district": "Dakshina Kannada"},
+    "pumpwell": {"lat": 12.8640, "lon": 74.8680, "name": "Pumpwell, Mangaluru, Dakshina Kannada, Karnataka, India", "admin1": "Karnataka", "district": "Dakshina Kannada"},
+    "bejai": {"lat": 12.8890, "lon": 74.8470, "name": "Bejai, Mangaluru, Dakshina Kannada, Karnataka, India", "admin1": "Karnataka", "district": "Dakshina Kannada"},
+    "bondel": {"lat": 12.9240, "lon": 74.8780, "name": "Bondel, Mangaluru, Dakshina Kannada, Karnataka, India", "admin1": "Karnataka", "district": "Dakshina Kannada"},
+    "vamanjoor": {"lat": 12.9260, "lon": 74.9080, "name": "Vamanjoor, Mangaluru, Dakshina Kannada, Karnataka, India", "admin1": "Karnataka", "district": "Dakshina Kannada"},
+    "derlakatte": {"lat": 12.8250, "lon": 74.8860, "name": "Deralakatte, Mangaluru, Dakshina Kannada, Karnataka, India", "admin1": "Karnataka", "district": "Dakshina Kannada"},
+    "konaje": {"lat": 12.8180, "lon": 74.9290, "name": "Konaje, Mangaluru, Dakshina Kannada, Karnataka, India", "admin1": "Karnataka", "district": "Dakshina Kannada"},
+    "thokkottu": {"lat": 12.8310, "lon": 74.8570, "name": "Thokkottu, Mangaluru, Dakshina Kannada, Karnataka, India", "admin1": "Karnataka", "district": "Dakshina Kannada"},
+    "kateel": {"lat": 13.0230, "lon": 74.8520, "name": "Kateel, Dakshina Kannada, Karnataka, India", "admin1": "Karnataka", "district": "Dakshina Kannada"},
+    "kinnigoli": {"lat": 13.0780, "lon": 74.8580, "name": "Kinnigoli, Dakshina Kannada, Karnataka, India", "admin1": "Karnataka", "district": "Dakshina Kannada"},
+    "gurupura": {"lat": 12.9410, "lon": 74.9350, "name": "Gurupura, Dakshina Kannada, Karnataka, India", "admin1": "Karnataka", "district": "Dakshina Kannada"},
+    "ganjimutt": {"lat": 12.9770, "lon": 74.9340, "name": "Ganjimutt, Dakshina Kannada, Karnataka, India", "admin1": "Karnataka", "district": "Dakshina Kannada"},
+    "kaikamba": {"lat": 12.9770, "lon": 74.9340, "name": "Kaikamba, Dakshina Kannada, Karnataka, India", "admin1": "Karnataka", "district": "Dakshina Kannada"},
+    "darbe": {"lat": 12.7580, "lon": 75.2050, "name": "Darbe, Puttur, Dakshina Kannada, Karnataka, India", "admin1": "Karnataka", "district": "Dakshina Kannada"},
+    "kabaka": {"lat": 12.7880, "lon": 75.1850, "name": "Kabaka, Puttur, Dakshina Kannada, Karnataka, India", "admin1": "Karnataka", "district": "Dakshina Kannada"},
+    "nehru nagar": {"lat": 12.7950, "lon": 75.2050, "name": "Nehru Nagar, Puttur, Dakshina Kannada, Karnataka, India", "admin1": "Karnataka", "district": "Dakshina Kannada"},
+    "bannur": {"lat": 12.7520, "lon": 75.2210, "name": "Bannur, Puttur, Dakshina Kannada, Karnataka, India", "admin1": "Karnataka", "district": "Dakshina Kannada"},
+    "dharmasthala": {"lat": 12.9564, "lon": 75.3783, "name": "Dharmasthala, Dakshina Kannada, Karnataka, India", "admin1": "Karnataka", "district": "Dakshina Kannada"},
+    "ujire": {"lat": 13.0039, "lon": 75.3267, "name": "Ujire, Dakshina Kannada, Karnataka, India", "admin1": "Karnataka", "district": "Dakshina Kannada"},
+    "subrahmanya": {"lat": 12.6667, "lon": 75.6000, "name": "Kukke Subrahmanya, Dakshina Kannada, Karnataka, India", "admin1": "Karnataka", "district": "Dakshina Kannada"},
+    "kukke": {"lat": 12.6667, "lon": 75.6000, "name": "Kukke Subrahmanya, Dakshina Kannada, Karnataka, India", "admin1": "Karnataka", "district": "Dakshina Kannada"},
+    "whitefield": {"lat": 12.9698, "lon": 77.7500, "name": "Whitefield, Bengaluru, Karnataka, India", "admin1": "Karnataka", "district": "Bengaluru Urban"},
+    "electronic city": {"lat": 12.8399, "lon": 77.6770, "name": "Electronic City, Bengaluru, Karnataka, India", "admin1": "Karnataka", "district": "Bengaluru Urban"},
+    "yelahanka": {"lat": 13.1007, "lon": 77.5963, "name": "Yelahanka, Bengaluru, Karnataka, India", "admin1": "Karnataka", "district": "Bengaluru Urban"},
+    "indiranagar": {"lat": 12.9784, "lon": 77.6408, "name": "Indiranagar, Bengaluru, Karnataka, India", "admin1": "Karnataka", "district": "Bengaluru Urban"},
+    "koramangala": {"lat": 12.9352, "lon": 77.6245, "name": "Koramangala, Bengaluru, Karnataka, India", "admin1": "Karnataka", "district": "Bengaluru Urban"},
+    "kengeri": {"lat": 12.9081, "lon": 77.4816, "name": "Kengeri, Bengaluru, Karnataka, India", "admin1": "Karnataka", "district": "Bengaluru Urban"},
+    "peenya": {"lat": 13.0285, "lon": 77.5197, "name": "Peenya, Bengaluru, Karnataka, India", "admin1": "Karnataka", "district": "Bengaluru Urban"},
+
 }
 
 
@@ -327,15 +367,28 @@ def resolve_pinpoint_coordinates(location: str) -> dict:
     if is_outside and outside_info:
         return outside_info
 
-    # 2. Check predefined Karnataka District & Taluk centers
+    # 2. Check predefined Karnataka District, Taluk, & Specific Sub-localities
+    # 2a. Direct exact lookup
     if loc_lower in KARNATAKA_DISTRICT_CENTERS:
         res = dict(KARNATAKA_DISTRICT_CENTERS[loc_lower])
         res["is_karnataka"] = True
         return res
 
-    for k, info in KARNATAKA_DISTRICT_CENTERS.items():
-        if k == loc_lower or (len(loc_lower) >= 4 and (k in loc_lower or loc_lower in k)):
-            res = dict(info)
+    # 2b. Multi-word phrase token check: e.g. "bajipe in magalore", "bajpe airport", "surathkal mangaluru"
+    # Prioritizes specific towns/suburbs before broad parent districts
+    query_tokens = re.findall(r"[a-zA-Z0-9]+", loc_lower)
+    skip_generic = {"in", "near", "at", "the", "and", "zone", "taluk", "district", "city", "karnataka", "india", "mangaluru", "mangalore", "bengaluru", "bangalore"}
+    for tok in query_tokens:
+        if tok not in skip_generic and tok in KARNATAKA_DISTRICT_CENTERS:
+            res = dict(KARNATAKA_DISTRICT_CENTERS[tok])
+            res["is_karnataka"] = True
+            return res
+
+    # 2c. Substring matching sorted by key length descending (longer specific places match first)
+    sorted_keys = sorted(KARNATAKA_DISTRICT_CENTERS.keys(), key=lambda x: len(x), reverse=True)
+    for k in sorted_keys:
+        if len(k) >= 4 and (k in loc_lower or loc_lower in k):
+            res = dict(KARNATAKA_DISTRICT_CENTERS[k])
             res["is_karnataka"] = True
             return res
 

@@ -1127,39 +1127,51 @@ body {
   font-weight: 600;
 }
 
-/* Leaflet Custom Marker & Station Pin */
+/* Leaflet Custom Marker & Station Pin - Responsive Dynamic Width (Never Overflows) */
 .leaflet-radar-marker,
 .leaflet-subzone-marker {
   background: transparent !important;
   border: none !important;
+  width: auto !important;
+  height: auto !important;
+  overflow: visible !important;
 }
 
 .radar-station-blip {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
+  gap: 8px;
   background: var(--card-bg);
   border: 2px solid var(--card-border);
-  border-radius: 20px;
-  padding: 4px 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  border-radius: 24px;
+  padding: 6px 16px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
   white-space: nowrap;
   font-family: inherit;
-  font-size: 0.76rem;
+  font-size: 0.78rem;
   font-weight: 800;
   color: var(--text-primary);
   cursor: pointer;
   box-sizing: border-box;
-  width: 100%;
-  height: 100%;
+  width: max-content;
+  max-width: 380px;
+  transform: translate(-50%, -50%);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .radar-station-blip:hover {
-  transform: scale(1.06);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  transform: translate(-50%, -50%) scale(1.05);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.38);
   z-index: 3000;
+}
+
+.radar-station-blip span.blip-text {
+  display: inline-block;
+  white-space: nowrap;
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Sleek Non-Overlapping Micro-Zone Satellite Chips */
@@ -1167,26 +1179,27 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 6px;
   background: var(--card-bg);
   border: 1.5px solid var(--card-border);
-  border-radius: 12px;
-  padding: 2px 8px;
+  border-radius: 16px;
+  padding: 3px 10px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
   white-space: nowrap;
   font-family: inherit;
-  font-size: 0.68rem;
+  font-size: 0.70rem;
   font-weight: 700;
   color: var(--text-primary);
   cursor: pointer;
   box-sizing: border-box;
-  width: 100%;
-  height: 100%;
+  width: max-content;
+  max-width: 240px;
+  transform: translate(-50%, -50%);
   transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .radar-subzone-chip:hover {
-  transform: scale(1.12);
+  transform: translate(-50%, -50%) scale(1.10);
   border-color: var(--accent-honey);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
   z-index: 2500;

@@ -16,6 +16,7 @@ from notifications.telegram_service import send_telegram_alert
 
 # Karnataka locality name aliases & normalizations
 ALIASES = {
+    "bajipe": "bajpe",
     "mangaluru": "mangalore", "mangalore": "mangalore",
     "bengaluru": "bangalore", "bangalore": "bangalore",
     "hubballi": "hubli", "hubli": "hubli",

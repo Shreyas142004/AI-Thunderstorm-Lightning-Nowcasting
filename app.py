@@ -920,7 +920,7 @@ def demo_thunderstorm():
             {"name": "Surathkal & NITK Coastal Sector", "lat": 13.0070, "lon": 74.7940, "probability": round(prob + 2.0, 1), "temp": round(temp - 0.5, 1), "humidity": round(humidity + 3, 1)},
             {"name": "Panambur Port & Industrial Sector", "lat": 12.9460, "lon": 74.8120, "probability": round(prob + 1.2, 1), "temp": round(temp - 0.2, 1), "humidity": round(humidity + 2, 1)},
             {"name": "Ullal Coastal Belt & Estuary", "lat": 12.8050, "lon": 74.8520, "probability": round(prob - 3.5, 1), "temp": round(temp + 0.2, 1), "humidity": round(humidity - 1, 1)},
-            {"name": "Bajpe Airport & Kavoor Corridor", "lat": 12.9280, "lon": 74.8720, "probability": round(prob + 0.8, 1), "temp": round(temp + 0.1, 1), "humidity": round(humidity + 1, 1)}
+            {"name": "Bajpe (Airport Zone & North Taluk)", "lat": 12.9803, "lon": 74.8832, "probability": round(prob + 0.8, 1), "temp": round(temp + 0.1, 1), "humidity": round(humidity + 1, 1)}
         ]
     elif "puttur" in loc_low:
         demo_zones = [

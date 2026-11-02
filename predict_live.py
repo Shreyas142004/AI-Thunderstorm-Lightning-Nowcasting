@@ -127,7 +127,10 @@ KARNATAKA_CITY_COORDINATES = {
     "madikeri": {"lat": 12.4244, "lon": 75.7382, "name": "Madikeri (Coorg), Karnataka, India"},
     "surathkal": {"lat": 12.9807, "lon": 74.8031, "name": "Surathkal, Mangalore, Karnataka, India"},
     "panambur": {"lat": 12.9463, "lon": 74.8055, "name": "Panambur, Mangalore, Karnataka, India"},
-    "bajpe": {"lat": 12.9803, "lon": 74.8832, "name": "Bajpe (Airport Zone), Mangalore, Karnataka, India"},
+    "bajpe": {"lat": 12.9803, "lon": 74.8832, "name": "Bajpe, Mangaluru, Karnataka, India"},
+    "bajipe": {"lat": 12.9803, "lon": 74.8832, "name": "Bajpe, Mangaluru, Karnataka, India"},
+    "bajpe airport": {"lat": 12.9613, "lon": 74.8901, "name": "Mangaluru International Airport (Bajpe), Karnataka, India"},
+    "mangalore airport": {"lat": 12.9613, "lon": 74.8901, "name": "Mangaluru International Airport (Bajpe), Karnataka, India"},
     "kadri": {"lat": 12.8797, "lon": 74.8584, "name": "Kadri Hills, Mangalore, Karnataka, India"},
     "hampankatta": {"lat": 12.8698, "lon": 74.8431, "name": "Hampankatta, Mangalore, Karnataka, India"},
     "ullal": {"lat": 12.8080, "lon": 74.8532, "name": "Ullal Coast, Mangalore, Karnataka, India"},
@@ -181,7 +184,7 @@ KARNATAKA_SUB_LOCATIONS = {
         {"name": "Surathkal & NITK Coastal Sector", "query": "Surathkal", "lat": 13.0070, "lon": 74.7940},
         {"name": "Panambur Port & Industrial Sector", "query": "Panambur", "lat": 12.9460, "lon": 74.8120},
         {"name": "Ullal Coastal Belt & Estuary", "query": "Ullal", "lat": 12.8050, "lon": 74.8520},
-        {"name": "Bajpe Airport & Kavoor Corridor", "query": "Bajpe", "lat": 12.9280, "lon": 74.8720}
+        {"name": "Bajpe (Airport Zone & North Taluk)", "query": "Bajpe", "lat": 12.9803, "lon": 74.8832}
     ],
     "bangalore": [
         {"name": "HAL Observatory & Indiranagar", "query": "Indiranagar"},

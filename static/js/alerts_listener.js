@@ -14,6 +14,7 @@
 
   // Locality aliases and stopwords for localized alert targeting
   const ALIASES = {
+    'bajipe': 'bajpe',
     'mangaluru': 'mangalore', 'mangalore': 'mangalore',
     'bengaluru': 'bangalore', 'bangalore': 'bangalore',
     'hubballi': 'hubli', 'hubli': 'hubli',

@@ -41,6 +41,12 @@ let stationMarkersGroup = null;
 let lastThunderstormAlertSig = null;
 let currentActiveAlert = null;
 
+// Active Timeline & Microzone State Tracker
+let activeMainTimeline = null;
+let activeMainStationName = '';
+let lastRenderedData = null;
+let selectedMicroZoneIdx = null;
+
 
 // Initialize Application
 function initApp() {
@@ -332,10 +338,15 @@ function updateRadarMap(lat, lon, locationName, probability, microZones, isKarna
 
       L.marker([zLat, zLon], { icon: subIcon, zIndexOffset: 800 })
         .bindPopup(`
-          <div style="font-family: inherit; font-size: 0.82rem; line-height: 1.4;">
+          <div style="font-family: inherit; font-size: 0.82rem; line-height: 1.4; padding: 2px;">
             <strong>${zone.name}</strong><br>
             <span style="color: var(--text-muted);">Zone Convective Risk:</span> 
             <strong style="color: ${zProb >= 70 ? 'var(--accent-terracotta)' : (zProb >= 35 ? 'var(--accent-honey)' : 'var(--accent-sage)')};">${zProb.toFixed(1)}%</strong>
+            <div style="margin-top: 8px;">
+              <button type="button" onclick="openMicrozoneModalByIndex(${idx})" style="background: var(--accent-terracotta); color: #fff; border: none; border-radius: 6px; padding: 5px 10px; font-size: 0.72rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                <span>View 30-90m Pop-Up ↗</span>
+              </button>
+            </div>
           </div>
         `)
         .addTo(stationMarkersGroup);
@@ -852,6 +863,19 @@ function renderDashboard(data) {
   document.getElementById('vpdVal').textContent = (isKa && tel.vpd !== null && tel.vpd !== undefined) ? `${tel.vpd} hPa` : '--';
   document.getElementById('pressureDropVal').textContent = (isKa && tel.pressure_drop !== null && tel.pressure_drop !== undefined) ? `${tel.pressure_drop} hPa` : '--';
 
+  // Save state for timeline restoration & microzone navigation
+  lastRenderedData = data;
+  activeMainTimeline = data.timeline || [];
+  activeMainStationName = data.location || 'Observatory';
+  selectedMicroZoneIdx = null;
+
+  const timelineHeading = document.getElementById('timelineTrackHeading');
+  if (timelineHeading) timelineHeading.textContent = 'Timeline Nowcasting Track';
+  const timelineSub = document.getElementById('timelineTrackSub');
+  if (timelineSub) timelineSub.textContent = '3-Step short-term convective cell evolution (+30m, +60m, +90m)';
+  const resetBtn = document.getElementById('btnResetTimeline');
+  if (resetBtn) resetBtn.style.display = 'none';
+
   // 5. Update Interactive Leaflet Doppler Radar Map
   updateRadarMap(data.latitude, data.longitude, data.location, hasProb ? pred.convective_probability : null, data.micro_zones, isKa);
 
@@ -1104,24 +1128,35 @@ function renderPlacesDetails(data) {
   }
 
   zones.forEach((zone, idx) => {
-    const zProb = parseFloat(zone.probability || prob);
+    const zProb = parseFloat(zone.probability !== undefined && zone.probability !== null ? zone.probability : (prob || 28.0));
     const pillClass = zProb >= 70 ? 'risk-pill-red' : (zProb >= 35 ? 'risk-pill-amber' : 'risk-pill-green');
     const zTemp = zone.temp ? `${zone.temp.toFixed(1)}°C` : `${(data.telemetry?.temp || 26.5).toFixed(1)}°C`;
     const zHum = zone.humidity ? `${zone.humidity.toFixed(0)}% Hum` : `${(data.telemetry?.humidity || 85).toFixed(0)}% Hum`;
 
     const row = document.createElement('div');
     row.className = 'place-item-card';
-    row.title = `Click to pan radar to ${zone.name}`;
+    row.id = `placeCard_${idx}`;
+    row.title = `Click to view +30m, +60m, +90m weather prediction pop-up window for ${zone.name}`;
     row.innerHTML = `
       <div class="place-item-info">
         <span class="place-item-name">${zone.name}</span>
         <span class="place-item-sub">${zTemp} • ${zHum}</span>
       </div>
-      <span class="place-item-risk ${pillClass}">${zProb.toFixed(1)}%</span>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span class="place-item-risk ${pillClass}">${zProb.toFixed(1)}%</span>
+        <button type="button" class="place-view-modal-btn" title="Open 30, 60, 90 mins prediction pop-up" aria-label="Open prediction pop-up">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <line x1="10" y1="14" x2="21" y2="3"></line>
+          </svg>
+        </button>
+      </div>
     `;
 
-    // Click to focus or zoom into the microzone
-    row.addEventListener('click', () => {
+    // Click to highlight, pan radar, and open detailed prediction pop-up window
+    row.addEventListener('click', (e) => {
+      e.stopPropagation();
       if (radarMap) {
         const destLat = zone.lat || data.latitude;
         const destLon = zone.lon || data.longitude;
@@ -1129,12 +1164,289 @@ function renderPlacesDetails(data) {
           radarMap.flyTo([destLat, destLon], 13.5, { duration: 0.7 });
         }
       }
+      document.querySelectorAll('.place-item-card.active').forEach(el => el.classList.remove('active'));
+      row.classList.add('active');
+      openMicrozoneModal(zone, data);
     });
 
     listBody.appendChild(row);
   });
 }
 
+/**
+ * Active Pop-Up Modal Zone References
+ */
+let currentModalZone = null;
+let currentModalData = null;
+
+/**
+ * Open Micro-Zone Weather Prediction Pop-Up Window (+30m, +60m, +90m)
+ */
+function openMicrozoneModal(zone, data) {
+  currentModalZone = zone;
+  currentModalData = data;
+
+  const modal = document.getElementById('microzoneModal');
+  if (!modal) return;
+
+  const mzmTitle = document.getElementById('mzmTitle');
+  const mzmSub = document.getElementById('mzmSubheading');
+  const mzmRiskBadge = document.getElementById('mzmRiskBadge');
+  const mzmCoordsBadge = document.getElementById('mzmCoordsBadge');
+  const mzmSummaryMeta = document.getElementById('mzmSummaryMeta');
+  const mzmStepsGrid = document.getElementById('mzmStepsGrid');
+  const mzmHeaderIcon = document.getElementById('mzmHeaderIcon');
+
+  if (mzmTitle) mzmTitle.textContent = `${zone.name} Nowcast`;
+
+  const zLat = zone.lat || data.latitude || 12.9141;
+  const zLon = zone.lon || data.longitude || 74.8560;
+  if (mzmCoordsBadge) mzmCoordsBadge.textContent = `${zLat.toFixed(4)}°N, ${zLon.toFixed(4)}°E`;
+  if (mzmSub) mzmSub.textContent = `High-Resolution 30, 60 & 90-Minute Convective Prediction • ${data.location || 'Karnataka'} Sector`;
+
+  const zProb = parseFloat(zone.probability !== undefined && zone.probability !== null ? zone.probability : (data.prediction?.convective_probability || 30.0));
+  const zTemp = zone.temp !== undefined ? zone.temp : (data.telemetry?.temp || 26.5);
+  const zHum = zone.humidity !== undefined ? zone.humidity : (data.telemetry?.humidity || 82.0);
+  const zCloud = zone.cloudcover !== undefined ? zone.cloudcover : (data.telemetry?.cloudcover || 75.0);
+
+  if (mzmRiskBadge) {
+    if (zProb >= 70.0) {
+      mzmRiskBadge.textContent = `⛈️ CRITICAL RISK (${zProb.toFixed(1)}%)`;
+      mzmRiskBadge.className = 'mzm-badge-risk risk-red';
+      if (mzmHeaderIcon) mzmHeaderIcon.textContent = '⛈️';
+    } else if (zProb >= 35.0) {
+      mzmRiskBadge.textContent = `⚡ MODERATE RISK (${zProb.toFixed(1)}%)`;
+      mzmRiskBadge.className = 'mzm-badge-risk risk-amber';
+      if (mzmHeaderIcon) mzmHeaderIcon.textContent = '⚡';
+    } else {
+      mzmRiskBadge.textContent = `🌤️ LOW RISK (${zProb.toFixed(1)}%)`;
+      mzmRiskBadge.className = 'mzm-badge-risk risk-green';
+      if (mzmHeaderIcon) mzmHeaderIcon.textContent = '🌤️';
+    }
+  }
+
+  if (mzmSummaryMeta) {
+    mzmSummaryMeta.textContent = `Current Baseline: ${zTemp.toFixed(1)}°C • ${zHum.toFixed(0)}% Hum • ${zCloud.toFixed(0)}% Clouds`;
+  }
+
+  // Obtain or synthesize 3-step timeline (+30m, +60m, +90m)
+  let zTimeline = zone.timeline;
+  if (!zTimeline || !Array.isArray(zTimeline) || zTimeline.length < 3) {
+    const now = new Date();
+    const offsets = [
+      { label: "+30 Mins Later", mins: 30, dt: 0.0, dh: 0.0, dc: 0.0 },
+      { label: "+60 Mins Later", mins: 60, dt: -0.4, dh: 3.0, dc: 5.0 },
+      { label: "+90 Mins Later", mins: 90, dt: -0.8, dh: 5.0, dc: 8.0 }
+    ];
+
+    zTimeline = offsets.map((off, oIdx) => {
+      const tDate = new Date(now.getTime() + off.mins * 60000);
+      const timeStr = tDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      let sProb = zProb;
+      let cond = "Scattered Clouds / Partly Cloudy";
+      let code = "GREEN";
+      let rLvl = "LOW (Convective Instability Unlikely)";
+
+      if (zProb >= 70.0) {
+        sProb = Math.min(100.0, zProb + (oIdx === 1 ? 2.0 : (oIdx === 2 ? -1.5 : 0.0)));
+        cond = sProb >= 75 ? "Severe Thunderstorm / Squall" : "Thunderstorm with Heavy Downpours";
+        code = "RED";
+        rLvl = "CRITICAL (Severe Thunderstorm / Heavy Rain Alert)";
+      } else if (zProb >= 35.0) {
+        sProb = Math.min(90.0, Math.max(20.0, zProb + (oIdx === 1 ? 3.5 : 1.0)));
+        cond = sProb >= 50 ? "Developing Thunderstorm / Towering Cumulus" : "Pre-Storm Instability";
+        code = "YELLOW";
+        rLvl = "MODERATE (Thunderstorm Watch / Cell Initiation)";
+      } else {
+        sProb = Math.max(5.0, zProb + (oIdx * 1.5));
+        cond = sProb < 25 ? "Partly Cloudy / Fair" : "Isolated Cloud Buildup";
+        code = "GREEN";
+      }
+
+      const sTemp = parseFloat((zTemp + off.dt).toFixed(1));
+      const sHum = Math.min(100, Math.round(zHum + off.dh));
+      const sDew = parseFloat((sTemp - ((100 - sHum) / 5)).toFixed(1));
+
+      return {
+        label: off.label,
+        time_str: timeStr,
+        temp: sTemp,
+        dew: sDew,
+        humidity: sHum,
+        cloudcover: Math.min(100, Math.round(zCloud + off.dc)),
+        windspeed: parseFloat((3.2 + (zProb >= 50 ? oIdx * 0.8 : 0.2)).toFixed(1)),
+        probability: parseFloat(sProb.toFixed(1)),
+        conditions: cond,
+        alert_code: code,
+        risk_level: rLvl
+      };
+    });
+  }
+
+  // Populate 3 step cards in modal grid
+  if (mzmStepsGrid) {
+    mzmStepsGrid.innerHTML = '';
+    const stepLabels = ['+30 Mins Later', '+60 Mins Later', '+90 Mins Later'];
+    zTimeline.slice(0, 3).forEach((step, sIdx) => {
+      const p = parseFloat(step.probability !== undefined && step.probability !== null ? step.probability : zProb);
+      const cardClass = p >= 70.0 ? 'step-red' : (p >= 35.0 ? 'step-amber' : 'step-green');
+      const riskPillText = p >= 70.0 ? 'Critical Alert' : (p >= 35.0 ? 'Pre-Storm Watch' : 'Calm / Fair');
+      const labelText = step.label || stepLabels[sIdx];
+      const dewVal = step.dew !== undefined ? `${step.dew}°C` : `${(step.temp - 2.5).toFixed(1)}°C`;
+      const windVal = step.windspeed !== undefined ? `${step.windspeed} km/h` : '4.2 km/h';
+
+      const card = document.createElement('div');
+      card.className = `mzm-step-card-full ${cardClass}`;
+      card.innerHTML = `
+        <div class="mzm-step-head">
+          <span class="mzm-step-label">${labelText}</span>
+          <span class="mzm-step-time-badge">${step.time_str || '--:--'}</span>
+        </div>
+        <div class="mzm-step-prob-row">
+          <span class="mzm-step-big-prob">${p.toFixed(1)}%</span>
+          <span class="mzm-step-risk-pill">${riskPillText}</span>
+        </div>
+        <div class="mzm-step-condition" title="${step.conditions}">
+          ${step.conditions || 'Cloud Development'}
+        </div>
+        <div class="mzm-step-metrics-grid">
+          <div class="mzm-metric-item">
+            <span class="mzm-metric-lbl">🌡️ Temperature</span>
+            <span class="mzm-metric-val">${step.temp}°C</span>
+          </div>
+          <div class="mzm-metric-item">
+            <span class="mzm-metric-lbl">💧 Humidity</span>
+            <span class="mzm-metric-val">${step.humidity}%</span>
+          </div>
+          <div class="mzm-metric-item">
+            <span class="mzm-metric-lbl">☁️ Cloud Cover</span>
+            <span class="mzm-metric-val">${step.cloudcover}%</span>
+          </div>
+          <div class="mzm-metric-item">
+            <span class="mzm-metric-lbl">💨 Wind Speed</span>
+            <span class="mzm-metric-val">${windVal}</span>
+          </div>
+        </div>
+      `;
+      mzmStepsGrid.appendChild(card);
+    });
+  }
+
+  // Display pop-up window
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+/**
+ * Close Micro-Zone Pop-Up Window
+ */
+function closeMicrozoneModal() {
+  const modal = document.getElementById('microzoneModal');
+  if (modal) modal.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+/**
+ * Handle clicking outside modal card (Backdrop click)
+ */
+function handleMicrozoneModalBackdrop(e) {
+  if (e.target.id === 'microzoneModal') {
+    closeMicrozoneModal();
+  }
+}
+
+/**
+ * Fly radar directly to active modal zone
+ */
+function flyRadarToActiveZone() {
+  if (currentModalZone && radarMap) {
+    const destLat = currentModalZone.lat || currentModalData?.latitude;
+    const destLon = currentModalZone.lon || currentModalData?.longitude;
+    if (destLat && destLon) {
+      radarMap.flyTo([destLat, destLon], 13.5, { duration: 0.8 });
+    }
+  }
+  closeMicrozoneModal();
+}
+
+/**
+ * Sync active modal zone to main dashboard Timeline track
+ */
+function syncModalToTimelineTrack() {
+  if (currentModalZone) {
+    const zTimeline = currentModalZone.timeline;
+    if (zTimeline && zTimeline.length >= 3) {
+      const heading = document.getElementById('timelineTrackHeading');
+      if (heading) heading.innerHTML = `Timeline Track — <span style="color: var(--accent-terracotta);">${currentModalZone.name}</span>`;
+      const sub = document.getElementById('timelineTrackSub');
+      if (sub) sub.textContent = `Localized 3-step convective nowcast (+30m, +60m, +90m) for ${currentModalZone.name}`;
+
+      const resetBtn = document.getElementById('btnResetTimeline');
+      if (resetBtn) {
+        resetBtn.style.display = 'inline-flex';
+        resetBtn.innerHTML = `
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+          </svg>
+          <span>Reset to ${activeMainStationName}</span>
+        `;
+      }
+      renderTimelineTrack(zTimeline, true);
+    }
+  }
+  closeMicrozoneModal();
+  focusTimelineTrack();
+}
+
+/**
+ * Helper to open modal by micro-zone index (e.g. from Leaflet map popup)
+ */
+function openMicrozoneModalByIndex(idx) {
+  if (lastRenderedData && lastRenderedData.micro_zones && lastRenderedData.micro_zones[idx]) {
+    openMicrozoneModal(lastRenderedData.micro_zones[idx], lastRenderedData);
+  }
+}
+
+/**
+ * Reset Timeline Track Back to Main Observatory Forecast
+ */
+function resetToFocalTimeline(e) {
+  if (e) {
+    e.stopPropagation();
+    e.preventDefault();
+  }
+  selectedMicroZoneIdx = null;
+
+  document.querySelectorAll('.place-item-card.active').forEach(el => el.classList.remove('active'));
+
+  const heading = document.getElementById('timelineTrackHeading');
+  if (heading) heading.textContent = 'Timeline Nowcasting Track';
+  const sub = document.getElementById('timelineTrackSub');
+  if (sub) sub.textContent = '3-Step short-term convective cell evolution (+30m, +60m, +90m)';
+
+  const resetBtn = document.getElementById('btnResetTimeline');
+  if (resetBtn) resetBtn.style.display = 'none';
+
+  if (activeMainTimeline && activeMainTimeline.length >= 3) {
+    const hasProb = activeMainTimeline.some(t => t.probability !== null && t.probability !== undefined);
+    renderTimelineTrack(activeMainTimeline, hasProb);
+  }
+
+  if (radarMap && lastRenderedData && lastRenderedData.latitude && lastRenderedData.longitude) {
+    radarMap.flyTo([lastRenderedData.latitude, lastRenderedData.longitude], 12.0, { duration: 0.6 });
+  }
+}
+
+/**
+ * Smoothly scroll to the main Timeline track
+ */
+function focusTimelineTrack(e) {
+  if (e) e.stopPropagation();
+  const el = document.getElementById('timelineTrackHeading') || document.querySelector('.timeline-section');
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
 
 /**
  * Visual Loading State
@@ -2022,3 +2334,11 @@ async function fetchAndShowHistory() {
     if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:18px; color:#c62828;">Error fetching history: ${err.message}</td></tr>`;
   }
 }
+
+// Global ESC key listener to close modals
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeMicrozoneModal();
+    if (typeof closeDispatchModal === 'function') closeDispatchModal();
+  }
+});

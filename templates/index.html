@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
   
   <!-- Custom Stylesheet with Universal Loading Fallback -->
-  <link rel="stylesheet" id="aerocastCss" href="/static/css/style.css?v=pill_bajpe_v27">
+  <link rel="stylesheet" id="aerocastCss" href="/static/css/style.css?v=mzt_popup_v29">
   <!-- Leaflet Map CSS with Fallback -->
   <link rel="stylesheet" id="leafletCss" href="/static/vendor/leaflet.css">
   <script>
@@ -21,10 +21,10 @@
       var path = window.location.pathname || '';
       var isInsideTemplates = path.indexOf('templates') !== -1;
       if (isFile) {
-        document.getElementById('aerocastCss').href = (isInsideTemplates ? '../static/css/style.css' : 'static/css/style.css') + '?v=pill_bajpe_v27';
+        document.getElementById('aerocastCss').href = (isInsideTemplates ? '../static/css/style.css' : 'static/css/style.css') + '?v=mzt_popup_v29';
         document.getElementById('leafletCss').href = isInsideTemplates ? '../static/vendor/leaflet.css' : 'static/vendor/leaflet.css';
       } else if (isInsideTemplates) {
-        document.getElementById('aerocastCss').href = '../static/css/style.css?v=pill_bajpe_v27';
+        document.getElementById('aerocastCss').href = '../static/css/style.css?v=mzt_popup_v29';
         document.getElementById('leafletCss').href = '../static/vendor/leaflet.css';
       }
     })();
@@ -488,10 +488,15 @@
         <div class="card timeline-journey-card">
           <div class="timeline-card-header">
             <div>
-              <h2 class="card-heading">Timeline Nowcasting Track</h2>
-              <span class="timeline-subtext">3-Step short-term convective cell evolution (+30m, +60m, +90m)</span>
+              <h2 class="card-heading" id="timelineTrackHeading">Timeline Nowcasting Track</h2>
+              <span class="timeline-subtext" id="timelineTrackSub">3-Step short-term convective cell evolution (+30m, +60m, +90m)</span>
             </div>
-            <span id="timelineIndicatorPill" class="timeline-indicator-pill">Atmospheric Cooling & Moisture Surge</span>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <button type="button" id="btnResetTimeline" class="timeline-reset-btn" onclick="resetToFocalTimeline(event)" style="display: none;" title="Reset back to primary observatory forecast">
+                🔄 Reset to Main Observatory
+              </button>
+              <span id="timelineIndicatorPill" class="timeline-indicator-pill">Atmospheric Cooling & Moisture Surge</span>
+            </div>
           </div>
 
           <!-- Connected Horizontal Stepper Sequence -->
@@ -756,6 +761,76 @@
       </div>
     </div>
 
+    <!-- Micro-Zone Detailed Weather Prediction Pop-Up Modal (+30m, +60m, +90m) -->
+    <div id="microzoneModal" class="microzone-modal-backdrop" style="display: none;" onclick="handleMicrozoneModalBackdrop(event)">
+      <div class="microzone-modal-card" role="dialog" aria-modal="true" aria-labelledby="mzmTitle">
+        <!-- Modal Header -->
+        <div class="microzone-modal-header">
+          <div class="mzm-header-title-box">
+            <div class="mzm-header-icon" id="mzmHeaderIcon">⚡</div>
+            <div>
+              <h3 id="mzmTitle" class="microzone-modal-heading">Micro-Zone Convective Nowcast</h3>
+              <p id="mzmSubheading" class="microzone-modal-subheading">Localized 30, 60 & 90-Minute Prediction</p>
+            </div>
+          </div>
+          <button type="button" class="microzone-modal-close" onclick="closeMicrozoneModal()" aria-label="Close modal">&times;</button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="microzone-modal-body">
+          <!-- Summary Banner -->
+          <div class="mzm-summary-card" id="mzmSummaryCard">
+            <div class="mzm-summary-left">
+              <span class="mzm-badge-risk" id="mzmRiskBadge">42.0% Risk</span>
+              <span class="mzm-badge-coords" id="mzmCoordsBadge">12.9600°N, 77.6500°E</span>
+            </div>
+            <div class="mzm-summary-right" id="mzmSummaryMeta">
+              Current: 27.9°C • 50% Hum • Scattered Clouds
+            </div>
+          </div>
+
+          <!-- 3-Step Prediction Grid (+30m, +60m, +90m) -->
+          <div class="mzm-steps-container">
+            <div class="mzm-steps-heading">
+              <span>⏱️ Short-Term Convective Evolution</span>
+              <span class="mzm-steps-sub">Atmospheric Physics & ML Nowcasting Trajectory</span>
+            </div>
+
+            <div class="mzm-steps-grid" id="mzmStepsGrid">
+              <!-- Dynamically populated 3 cards for +30m, +60m, +90m -->
+            </div>
+          </div>
+
+          <!-- Station Context Note -->
+          <div class="mzm-context-note">
+            <div class="mzm-note-icon">📡</div>
+            <div class="mzm-note-text" id="mzmContextNoteText">
+              Observations derived from High-Resolution WRF-Radar boundary layer modeling and S-band Doppler radial reflectivity calibrated for Karnataka micro-zones.
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Footer Actions -->
+        <div class="microzone-modal-footer">
+          <button type="button" class="mzm-action-btn btn-view-radar" id="mzmBtnFlyRadar" onclick="flyRadarToActiveZone()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/>
+            </svg>
+            <span>Focus Doppler Radar</span>
+          </button>
+          <button type="button" class="mzm-action-btn btn-sync-timeline" id="mzmBtnSyncTimeline" onclick="syncModalToTimelineTrack()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
+            </svg>
+            <span>Sync to Main Timeline</span>
+          </button>
+          <button type="button" class="mzm-action-btn btn-close-modal" onclick="closeMicrozoneModal()">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- Leaflet Map Script with Universal Loading Fallback -->
@@ -782,11 +857,11 @@
       var isFile = (window.location.protocol === 'file:');
       var path = window.location.pathname || '';
       var isInsideTemplates = path.indexOf('templates') !== -1;
-      var jsSrc = '/static/js/app.js?v=pill_bajpe_v27';
+      var jsSrc = '/static/js/app.js?v=mzt_popup_v29';
       if (isFile) {
-        jsSrc = (isInsideTemplates ? '../static/js/app.js' : 'static/js/app.js') + '?v=pill_bajpe_v27';
+        jsSrc = (isInsideTemplates ? '../static/js/app.js' : 'static/js/app.js') + '?v=mzt_popup_v29';
       } else if (isInsideTemplates) {
-        jsSrc = '../static/js/app.js?v=pill_bajpe_v27';
+        jsSrc = '../static/js/app.js?v=mzt_popup_v29';
       }
       var s = document.createElement('script');
       s.src = jsSrc;
@@ -794,6 +869,6 @@
     })();
   </script>
   <!-- Real-time Thunderstorm Alert Broadcast Listener for All Users -->
-  <script src="/static/js/alerts_listener.js?v=pill_bajpe_v27"></script>
+  <script src="/static/js/alerts_listener.js?v=mzt_popup_v29"></script>
 </body>
 </html>

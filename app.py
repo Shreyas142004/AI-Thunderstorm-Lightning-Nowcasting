@@ -495,6 +495,61 @@ def get_locations():
     return jsonify(locations)
 
 
+def generate_microzone_timeline(zone_name: str, base_prob: float, base_temp: float, base_humidity: float, base_cloud: float) -> list:
+    """
+    Generates a localized 3-step (+30m, +60m, +90m) weather prediction timeline for a specific micro-zone.
+    """
+    now = datetime.datetime.now()
+    offsets = [
+        ("+30 Mins Later", 30, 0.0, 0.0, 0.0),
+        ("+60 Mins Later", 60, -0.4, 3.0, 5.0),
+        ("+90 Mins Later", 90, -0.8, 5.0, 8.0)
+    ]
+    timeline = []
+    prob = float(base_prob) if base_prob is not None else 30.0
+    temp = float(base_temp) if base_temp is not None else 26.5
+    hum = float(base_humidity) if base_humidity is not None else 82.0
+    cld = float(base_cloud) if base_cloud is not None else 75.0
+
+    for idx, (label, mins, dtemp, dhum, dcld) in enumerate(offsets):
+        target_time = now + datetime.timedelta(minutes=mins)
+        if prob >= 70.0:
+            step_prob = round(min(100.0, prob + (2.0 if idx == 1 else (-1.5 if idx == 2 else 0.0))), 1)
+            cond = "Severe Thunderstorm / Squall" if step_prob >= 75 else "Thunderstorm with Heavy Downpours"
+            alert = "RED"
+            risk = "CRITICAL (Severe Thunderstorm / Heavy Rain Alert)"
+        elif prob >= 35.0:
+            step_prob = round(min(90.0, max(20.0, prob + (3.5 if idx == 1 else 1.0))), 1)
+            cond = "Developing Thunderstorm / Towering Cumulus" if step_prob >= 50 else "Pre-Storm Atmospheric Instability"
+            alert = "YELLOW"
+            risk = "MODERATE (Thunderstorm Watch / Cell Initiation)"
+        else:
+            step_prob = round(max(5.0, prob + (idx * 1.5)), 1)
+            cond = "Scattered Clouds / Partly Cloudy" if step_prob < 25 else "Isolated Cloud Buildup"
+            alert = "GREEN"
+            risk = "LOW (Convective Instability Unlikely)"
+
+        step_temp = round(temp + dtemp, 1)
+        step_hum = round(min(100.0, hum + dhum), 1)
+        step_cld = round(min(100.0, cld + dcld), 1)
+
+        timeline.append({
+            "label": label,
+            "time_str": target_time.strftime("%I:%M %p"),
+            "temp": step_temp,
+            "dew": round(step_temp - ((100.0 - step_hum) / 5.0), 1),
+            "humidity": step_hum,
+            "cloudcover": step_cld,
+            "windspeed": round(3.2 + (idx * 0.8 if prob >= 50 else 0.2), 1),
+            "conditions": cond,
+            "probability": step_prob,
+            "risk_level": risk,
+            "alert_code": alert
+        })
+
+    return timeline
+
+
 @app.route("/api/nowcast")
 @login_required
 def get_nowcast():
@@ -694,6 +749,7 @@ def get_nowcast():
                 z_code = matched["alert_code"] if matched else alert_code
                 z_risk = matched["risk_level"] if matched else risk_level
 
+                z_timeline = generate_microzone_timeline(z_name, z_prob, meta["temp"], meta["humidity"], meta["cloudcover"])
                 micro_zones.append({
                     "name": z_name,
                     "temp": meta["temp"],
@@ -705,7 +761,8 @@ def get_nowcast():
                     "alert_code": z_code,
                     "lat": meta["lat"],
                     "lon": meta["lon"],
-                    "is_center": meta["is_center"]
+                    "is_center": meta["is_center"],
+                    "timeline": z_timeline
                 })
 
             gemini_advisory = {
@@ -939,6 +996,9 @@ def demo_thunderstorm():
             {"name": f"{location} East Highland Ridge", "lat": round(demo_lat + 0.015, 4), "lon": round(demo_lon + 0.038, 4), "probability": round(prob + 2.5, 1), "temp": temp, "humidity": humidity},
             {"name": f"{location} West Commercial Belt", "lat": round(demo_lat - 0.015, 4), "lon": round(demo_lon - 0.038, 4), "probability": round(prob - 2.0, 1), "temp": temp, "humidity": humidity}
         ]
+
+    for dz in demo_zones:
+        dz["timeline"] = generate_microzone_timeline(dz["name"], dz["probability"], dz["temp"], dz.get("humidity", 85), 80.0)
 
     demo_response = {
         "scenario": scenario,

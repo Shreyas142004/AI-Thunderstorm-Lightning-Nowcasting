@@ -35,7 +35,9 @@ from sklearn.metrics import (
     roc_auc_score,
     confusion_matrix
 )
+# pyrefly: ignore[missing-import]
 import lightgbm as lgb
+# pyrefly: ignore[missing-import]
 import xgboost as xgb
 
 from config import PROCESSED_DIR, MODELS_DIR

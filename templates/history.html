@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Search & Prediction History — AeroCast AI</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" id="aerocastCss" href="/static/css/style.css?v=loc_target_v26">
+  <script>
+    (function() {
+      var savedTheme = localStorage.getItem('aerocast_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
+</head>
+<body data-theme="light" data-user-locality="{% if current_user and current_user.locality %}{{ current_user.locality }}{% endif %}">
+  <script>
+    (function() {
+      var savedTheme = localStorage.getItem('aerocast_theme') || 'light';
+      document.body.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
+
+  <div class="app-wrapper">
+
+    <!-- Top Navigation Header -->
+    <header class="app-header">
+      <div class="brand">
+        <a href="/" style="display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit;">
+          <div class="brand-glyph">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+              <path d="m13 10-3 5h4l-2 5"/>
+            </svg>
+          </div>
+          <div>
+            <div class="brand-title-row">
+              <h1 class="brand-title">AeroCast AI</h1>
+              <span class="brand-badge">Karnataka Nowcast</span>
+            </div>
+            <span class="brand-sub">Atmospheric Search & Prediction History</span>
+          </div>
+        </a>
+      </div>
+
+      <div class="header-actions">
+        <!-- Live Dashboard Link -->
+        <a href="/" class="nav-back-btn" title="Return to Live Nowcast Dashboard">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          <span>Live Radar</span>
+        </a>
+
+        <!-- About Project Link -->
+        <a href="/about" class="nav-about-btn" title="Learn about AeroCast AI & Atmospheric Physics Parameters">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+          <span>About</span>
+        </a>
+
+        <!-- Theme Toggle Switch -->
+        <div class="theme-switch-container">
+          <button class="theme-switch-btn active" id="btnLight" onclick="setAppTheme('light')" title="Warm Beige Theme">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+            </svg>
+          </button>
+          <button class="theme-switch-btn" id="btnDark" onclick="setAppTheme('dark')" title="Espresso Dark Theme">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- User Authentication Status / Profile Icon -->
+        {% if current_user %}
+        <a href="/profile" class="nav-user-icon-btn" id="navUserProfileBtn" title="Observer Profile ({{ current_user.username }})">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </a>
+        <a href="/logout" class="nav-about-btn" style="color: #c62828; border-color: rgba(198,40,40,0.3);" title="Sign out of your account">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          <span>Logout</span>
+        </a>
+        {% else %}
+        <a href="/login" class="nav-user-icon-btn" title="Sign In">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </a>
+        {% endif %}
+      </div>
+    </header>
+
+    <!-- Main History Container -->
+    <main class="history-page-container">
+
+      <!-- HERO BANNER: Search History Overview & Stats -->
+      <section class="history-hero-card">
+        <div class="history-hero-header">
+          <div class="history-hero-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+              <path d="M3 3v5h5"/>
+              <path d="M12 7v5l4 2"/>
+            </svg>
+          </div>
+          <div>
+            <div class="history-pill-tag">USER OBSERVATION ARCHIVE</div>
+            <h2 class="history-hero-title">Convective Search & Prediction History</h2>
+            <p class="history-hero-desc">
+              Archived Doppler radar telemetry snapshots, thermodynamic observations, and GBDT convective storm probability scores for your account (<strong>{{ current_user.email if current_user else 'Guest' }}</strong>).
+            </p>
+          </div>
+        </div>
+
+        <!-- Summary Stats Grid -->
+        <div class="history-stats-grid">
+          <div class="history-stat-box">
+            <span class="history-stat-num" id="statTotal">{{ stats.total_searches }}</span>
+            <span class="history-stat-label">Total Searches</span>
+          </div>
+          <div class="history-stat-box stat-critical">
+            <span class="history-stat-num" id="statCritical">{{ stats.critical_count }}</span>
+            <span class="history-stat-label">Critical Storms (≥70%)</span>
+          </div>
+          <div class="history-stat-box stat-moderate">
+            <span class="history-stat-num" id="statModerate">{{ stats.moderate_count }}</span>
+            <span class="history-stat-label">Moderate Risks (35-70%)</span>
+          </div>
+          <div class="history-stat-box">
+            <span class="history-stat-num" id="statPlaces">{{ stats.unique_places }}</span>
+            <span class="history-stat-label">Unique Locations</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- History Controls Bar: Live Search, Filter Tabs & Clear Button -->
+      <div class="history-controls-bar">
+        <div class="history-search-input-wrap">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+          </svg>
+          <input 
+            type="text" 
+            id="historySearchInput" 
+            placeholder="Filter past searches by village or city name..." 
+            oninput="filterHistoryCards()"
+            autocomplete="off"
+          >
+          <button type="button" id="btnClearSearch" onclick="clearSearchInput()" style="display: none;" title="Clear search filter">&times;</button>
+        </div>
+
+        <div class="history-filter-chips">
+          <button type="button" class="history-chip active" data-filter="all" onclick="setRiskFilter('all')">
+            All (<span id="chipCountAll">{{ stats.total_searches }}</span>)
+          </button>
+          <button type="button" class="history-chip chip-critical" data-filter="critical" onclick="setRiskFilter('critical')">
+            Critical (<span id="chipCountCritical">{{ stats.critical_count }}</span>)
+          </button>
+          <button type="button" class="history-chip chip-moderate" data-filter="moderate" onclick="setRiskFilter('moderate')">
+            Moderate (<span id="chipCountModerate">{{ stats.moderate_count }}</span>)
+          </button>
+          <button type="button" class="history-chip chip-low" data-filter="low" onclick="setRiskFilter('low')">
+            Low (<span id="chipCountLow">{{ stats.low_count }}</span>)
+          </button>
+        </div>
+
+        {% if history_items and history_items|length > 0 %}
+        <button type="button" class="history-clear-all-btn" onclick="confirmClearAllHistory()" title="Clear all search history records for your account">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+          </svg>
+          <span>Clear History</span>
+        </button>
+        {% endif %}
+      </div>
+
+      <!-- History Items Feed -->
+      <section id="historyListContainer" class="history-cards-list">
+        {% if history_items and history_items|length > 0 %}
+          {% for item in history_items %}
+            {% set prob = item.convective_probability %}
+            {% set risk_cat = 'critical' if (prob is not none and prob >= 70.0) else ('moderate' if (prob is not none and prob >= 35.0) else 'low') %}
+            <article 
+              class="history-card risk-tier-{{ risk_cat }}" 
+              id="history-item-{{ item.id }}"
+              data-location="{{ (item.location or '') | lower }}"
+              data-risk="{{ risk_cat }}"
+            >
+              <!-- Card Header Row -->
+              <div class="history-card-header">
+                <div class="history-card-title-group">
+                  <div class="history-loc-row">
+                    <h3 class="history-location-name">{{ item.location }}</h3>
+                    {% if item.is_karnataka %}
+                      <span class="history-badge-ka">Karnataka Region</span>
+                    {% else %}
+                      <span class="history-badge-out">Outside Karnataka</span>
+                    {% endif %}
+                  </div>
+                  <p class="history-address-sub">📍 {{ item.resolved_address }}</p>
+                  <span class="history-time-meta">⏱️ {{ item.timestamp_str }}</span>
+                </div>
+
+                <!-- Risk Badge Pill -->
+                <div class="history-card-risk-badge">
+                  {% if prob is not none %}
+                    {% if prob >= 70.0 %}
+                      <div class="history-risk-pill pill-critical">
+                        <span class="pill-dot"></span>
+                        <span class="pill-text">{{ prob }}% Critical Convective Storm</span>
+                      </div>
+                    {% elif prob >= 35.0 %}
+                      <div class="history-risk-pill pill-moderate">
+                        <span class="pill-dot"></span>
+                        <span class="pill-text">{{ prob }}% Moderate Convective Risk</span>
+                      </div>
+                    {% else %}
+                      <div class="history-risk-pill pill-low">
+                        <span class="pill-dot"></span>
+                        <span class="pill-text">{{ prob }}% Calm / Low Risk</span>
+                      </div>
+                    {% endif %}
+                  {% else %}
+                    <div class="history-risk-pill pill-disabled">
+                      <span class="pill-text">Prediction Disabled</span>
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Weather Conditions Description -->
+              {% if item.weather_condition %}
+              <div class="history-weather-condition">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+                </svg>
+                <span>{{ item.weather_condition }}</span>
+              </div>
+              {% endif %}
+
+              <!-- Telemetry Metrics Snapshot Tags -->
+              <div class="history-telemetry-row">
+                <div class="history-tele-tag" title="Air Temperature">
+                  <span class="tag-label">Temp:</span>
+                  <strong class="tag-val">{{ item.temp if item.temp is not none else '--' }}°C</strong>
+                </div>
+                <div class="history-tele-tag" title="Relative Humidity">
+                  <span class="tag-label">Humidity:</span>
+                  <strong class="tag-val">{{ item.humidity if item.humidity is not none else '--' }}%</strong>
+                </div>
+                <div class="history-tele-tag" title="Sustained Wind Velocity">
+                  <span class="tag-label">Wind:</span>
+                  <strong class="tag-val">{{ item.windspeed if item.windspeed is not none else '--' }} km/h</strong>
+                </div>
+                <div class="history-tele-tag" title="Atmospheric Pressure">
+                  <span class="tag-label">Pressure:</span>
+                  <strong class="tag-val">{{ item.pressure if item.pressure is not none else '--' }} hPa</strong>
+                </div>
+                <div class="history-tele-tag" title="Dew Point">
+                  <span class="tag-label">Dew Point:</span>
+                  <strong class="tag-val">{{ item.dew if item.dew is not none else '--' }}°C</strong>
+                </div>
+                {% if item.lead_time and item.lead_time != 'N/A' %}
+                <div class="history-tele-tag lead-time-tag" title="Forecast Lead Time">
+                  <span class="tag-label">Lead Time:</span>
+                  <strong class="tag-val">{{ item.lead_time }}</strong>
+                </div>
+                {% endif %}
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="history-card-actions">
+                <a 
+                  href="/?location={{ item.location | urlencode }}" 
+                  class="history-action-btn btn-nowcast" 
+                  title="Run live convective nowcast for {{ item.location }}"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+                  </svg>
+                  <span>View Live Nowcast</span>
+                </a>
+                <button 
+                  type="button" 
+                  class="history-action-btn btn-delete" 
+                  onclick="deleteHistoryItem('{{ item.id }}')"
+                  title="Remove this search record"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                  <span>Delete</span>
+                </button>
+              </div>
+            </article>
+          {% endfor %}
+        {% endif %}
+
+        <!-- Empty State (Shown when no items exist or all filtered out) -->
+        <div id="historyEmptyState" class="history-empty-card" style="{% if history_items and history_items|length > 0 %}display: none;{% endif %}">
+          <div class="empty-icon-wrap">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <h3 class="empty-title">No Search History Recorded Yet</h3>
+          <p class="empty-desc">
+            Whenever you search any town, village, or observatory in Karnataka on the Live Radar dashboard, your queries, Doppler reflectivity telemetry, and AI predictions will be saved here automatically.
+          </p>
+          <a href="/" class="history-empty-cta">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            <span>Explore Karnataka Weather Now</span>
+          </a>
+        </div>
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- Client-side Script for Theme, Filtering, Deletion & Clear -->
+  <script>
+    // Theme Switcher
+    function setAppTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      document.body.setAttribute('data-theme', theme);
+      localStorage.setItem('aerocast_theme', theme);
+      var btnLight = document.getElementById('btnLight');
+      var btnDark = document.getElementById('btnDark');
+      if (theme === 'dark') {
+        if (btnLight) btnLight.classList.remove('active');
+        if (btnDark) btnDark.classList.add('active');
+      } else {
+        if (btnDark) btnDark.classList.remove('active');
+        if (btnLight) btnLight.classList.add('active');
+      }
+    }
+
+    // Active Risk Filter State: 'all', 'critical', 'moderate', 'low'
+    var currentRiskFilter = 'all';
+
+    function setRiskFilter(filter) {
+      currentRiskFilter = filter;
+      var chips = document.querySelectorAll('.history-chip');
+      chips.forEach(function(c) {
+        if (c.getAttribute('data-filter') === filter) {
+          c.classList.add('active');
+        } else {
+          c.classList.remove('active');
+        }
+      });
+      filterHistoryCards();
+    }
+
+    function filterHistoryCards() {
+      var searchInput = document.getElementById('historySearchInput');
+      var query = (searchInput ? searchInput.value : '').toLowerCase().trim();
+      var clearBtn = document.getElementById('btnClearSearch');
+      if (clearBtn) clearBtn.style.display = query ? 'block' : 'none';
+
+      var cards = document.querySelectorAll('.history-card');
+      var visibleCount = 0;
+
+      cards.forEach(function(card) {
+        var loc = card.getAttribute('data-location') || '';
+        var risk = card.getAttribute('data-risk') || '';
+
+        var matchesSearch = !query || loc.indexOf(query) !== -1;
+        var matchesRisk = (currentRiskFilter === 'all') || (risk === currentRiskFilter);
+
+        if (matchesSearch && matchesRisk) {
+          card.style.display = 'flex';
+          visibleCount++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+
+      var emptyEl = document.getElementById('historyEmptyState');
+      if (emptyEl) {
+        if (visibleCount === 0) {
+          emptyEl.style.display = 'block';
+          if (cards.length > 0) {
+            emptyEl.querySelector('.empty-title').textContent = 'No Matches for Current Filter';
+            emptyEl.querySelector('.empty-desc').textContent = 'Try adjusting your search keyword or clearing the risk filter above.';
+          }
+        } else {
+          emptyEl.style.display = 'none';
+        }
+      }
+    }
+
+    function clearSearchInput() {
+      var searchInput = document.getElementById('historySearchInput');
+      if (searchInput) {
+        searchInput.value = '';
+        filterHistoryCards();
+      }
+    }
+
+    // Delete single history item
+    function deleteHistoryItem(id) {
+      if (!confirm('Are you sure you want to remove this search from your history?')) {
+        return;
+      }
+      var card = document.getElementById('history-item-' + id);
+      if (card) {
+        card.style.opacity = '0.4';
+        card.style.pointerEvents = 'none';
+      }
+
+      fetch('/api/history/' + encodeURIComponent(id), {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        if (data.success) {
+          if (card) {
+            card.style.transition = 'all 0.3s ease';
+            card.style.transform = 'scale(0.95)';
+            card.style.opacity = '0';
+            setTimeout(function() {
+              if (card && card.parentNode) {
+                card.parentNode.removeChild(card);
+              }
+              recalculateStats();
+              filterHistoryCards();
+            }, 300);
+          }
+        } else {
+          alert('Failed to delete history item: ' + (data.error || 'Unknown error'));
+          if (card) {
+            card.style.opacity = '1';
+            card.style.pointerEvents = 'auto';
+          }
+        }
+      })
+      .catch(function(err) {
+        alert('Network error while deleting history record.');
+        if (card) {
+          card.style.opacity = '1';
+          card.style.pointerEvents = 'auto';
+        }
+      });
+    }
+
+    // Clear all history
+    function confirmClearAllHistory() {
+      if (!confirm('Are you sure you want to completely clear your entire search and nowcasting history? This action cannot be undone.')) {
+        return;
+      }
+
+      fetch('/api/history/clear', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        if (data.success) {
+          // Remove all cards
+          var cards = document.querySelectorAll('.history-card');
+          cards.forEach(function(c) {
+            if (c.parentNode) c.parentNode.removeChild(c);
+          });
+          // Hide clear button
+          var clearBtn = document.querySelector('.history-clear-all-btn');
+          if (clearBtn) clearBtn.style.display = 'none';
+          // Update counters
+          document.getElementById('statTotal').textContent = '0';
+          document.getElementById('statCritical').textContent = '0';
+          document.getElementById('statModerate').textContent = '0';
+          document.getElementById('statPlaces').textContent = '0';
+          document.getElementById('chipCountAll').textContent = '0';
+          document.getElementById('chipCountCritical').textContent = '0';
+          document.getElementById('chipCountModerate').textContent = '0';
+          document.getElementById('chipCountLow').textContent = '0';
+
+          var emptyEl = document.getElementById('historyEmptyState');
+          if (emptyEl) {
+            emptyEl.style.display = 'block';
+            emptyEl.querySelector('.empty-title').textContent = 'No Search History Recorded Yet';
+            emptyEl.querySelector('.empty-desc').textContent = 'Whenever you search any town, village, or observatory in Karnataka, your records will be saved here automatically.';
+          }
+        } else {
+          alert('Failed to clear history: ' + (data.error || 'Unknown error'));
+        }
+      })
+      .catch(function(err) {
+        alert('Network error while clearing search history.');
+      });
+    }
+
+    function recalculateStats() {
+      var cards = document.querySelectorAll('.history-card');
+      var total = cards.length;
+      var critical = 0;
+      var moderate = 0;
+      var low = 0;
+      var locations = new Set();
+
+      cards.forEach(function(c) {
+        var risk = c.getAttribute('data-risk');
+        var loc = c.getAttribute('data-location');
+        if (loc) locations.add(loc);
+        if (risk === 'critical') critical++;
+        else if (risk === 'moderate') moderate++;
+        else if (risk === 'low') low++;
+      });
+
+      var elTotal = document.getElementById('statTotal');
+      var elCrit = document.getElementById('statCritical');
+      var elMod = document.getElementById('statModerate');
+      var elPlaces = document.getElementById('statPlaces');
+
+      if (elTotal) elTotal.textContent = total;
+      if (elCrit) elCrit.textContent = critical;
+      if (elMod) elMod.textContent = moderate;
+      if (elPlaces) elPlaces.textContent = locations.size;
+
+      var chipAll = document.getElementById('chipCountAll');
+      var chipCrit = document.getElementById('chipCountCritical');
+      var chipMod = document.getElementById('chipCountModerate');
+      var chipLow = document.getElementById('chipCountLow');
+
+      if (chipAll) chipAll.textContent = total;
+      if (chipCrit) chipCrit.textContent = critical;
+      if (chipMod) chipMod.textContent = moderate;
+      if (chipLow) chipLow.textContent = low;
+
+      if (total === 0) {
+        var clearBtn = document.querySelector('.history-clear-all-btn');
+        if (clearBtn) clearBtn.style.display = 'none';
+      }
+    }
+  </script>
+  <!-- Real-time Thunderstorm Alert Broadcast Listener for All Users -->
+  <script src="/static/js/alerts_listener.js?v=loc_target_v26"></script>
+</body>
+</html>

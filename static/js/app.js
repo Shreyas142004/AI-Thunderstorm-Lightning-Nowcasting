@@ -9,20 +9,66 @@ let currentTheme = localStorage.getItem('aerocast_theme') || 'light';
 let currentLocation = 'Puttur';
 let currentRadarCenter = [12.7667, 75.2016]; // Default Puttur coordinates
 
+const INITIAL_CITY_COORDS = {
+  'puttur': [12.7667, 75.2016],
+  'mangaluru': [12.9141, 74.8560],
+  'mangalore': [12.9141, 74.8560],
+  'bengaluru': [12.9716, 77.5946],
+  'bangalore': [12.9716, 77.5946],
+  'hubballi': [15.3647, 75.1240],
+  'hubli': [15.3647, 75.1240],
+  'mysuru': [12.2958, 76.6394],
+  'mysore': [12.2958, 76.6394],
+  'udupi': [13.3409, 74.7421],
+  'manipal': [13.3525, 74.7865],
+  'bantwal': [12.8944, 75.0347],
+  'sullia': [12.5562, 75.3897],
+  'belthangady': [12.9984, 75.2575],
+  'hassan': [13.0072, 76.1030],
+  'shivamogga': [13.9299, 75.5681],
+  'belagavi': [15.8497, 74.4977]
+};
+
 // Leaflet Map Handles
 let radarMap = null;
 let tileLayer = null;
 let radarLayersGroup = null;
 let stationMarkersGroup = null;
 
+// Thunderstorm Alert State Tracker
+let lastThunderstormAlertSig = null;
+let currentActiveAlert = null;
+
 
 // Initialize Application
 function initApp() {
   setAppTheme(currentTheme);
   startLiveClock();
+
+  const inputEl = document.getElementById('locationInput');
+  const userLoc = (document.body.dataset.userLocality || '').trim() || (inputEl ? inputEl.value.trim() : 'Puttur');
+  const townKey = userLoc.split(',')[0].trim().toLowerCase();
+  if (INITIAL_CITY_COORDS[townKey]) {
+    currentRadarCenter = INITIAL_CITY_COORDS[townKey];
+  }
+
   initRadarMap();
-  // Do NOT automatically predict on page load / reload:
-  setIdleDashboardState();
+
+  // If location query parameter is present in URL (e.g. from Search History page), execute nowcast for it
+  const urlParams = new URLSearchParams(window.location.search);
+  const qLoc = urlParams.get('location') || urlParams.get('q');
+  if (qLoc && qLoc.trim()) {
+    const cleanQ = qLoc.trim();
+    if (inputEl) inputEl.value = cleanQ;
+    currentLocation = cleanQ;
+    fetchNowcast(cleanQ);
+  } else {
+    // Default search input and current location to the logged-in user's locality
+    if (inputEl && userLoc) inputEl.value = userLoc;
+    currentLocation = userLoc;
+    // Do NOT automatically predict on fresh dashboard load:
+    setIdleDashboardState();
+  }
 }
 
 if (document.readyState === 'loading') {
@@ -105,17 +151,19 @@ function initRadarMap() {
 
   try {
     radarMap = L.map('radarLeafletMap', {
-      zoomControl: false,
-      scrollWheelZoom: false,
-      doubleClickZoom: false,
-      touchZoom: false,
-      boxZoom: false,
-      keyboard: false,
+      zoomControl: true,
+      scrollWheelZoom: true,
+      doubleClickZoom: true,
+      touchZoom: true,
+      boxZoom: true,
+      keyboard: true,
       dragging: true,
       attributionControl: false,
-      minZoom: 10,
-      maxZoom: 10
-    }).setView(currentRadarCenter, 10);
+      zoomSnap: 0.25,
+      zoomDelta: 0.5,
+      minZoom: 8,
+      maxZoom: 16
+    }).setView(currentRadarCenter, 12.5);
 
     // Apply theme tiles
     updateMapTiles();
@@ -135,22 +183,23 @@ function initRadarMap() {
 
 
 /**
- * Update Leaflet Map Tile Theme
+ * Update Leaflet Map Tile Theme (Consistently OpenStreetMap across both Dark and Light Themes)
  */
 function updateMapTiles() {
   if (!radarMap || typeof L === 'undefined') return;
+
+  const tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+
+  // If tileLayer is already loaded with OpenStreetMap, keep it seamlessly without flicker
+  if (tileLayer && tileLayer._url === tileUrl) {
+    return;
+  }
 
   if (tileLayer) {
     try { radarMap.removeLayer(tileLayer); } catch (e) {}
   }
 
-  const isDark = (currentTheme === 'dark');
-  // OpenStreetMap for Light Theme (rich topography, towns & boundaries, 100% free, no API key)
-  // ESRI World Dark Gray Canvas for Espresso Dark Theme
-  const tileUrl = isDark
-    ? 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'
-    : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-
+  // Consistent OpenStreetMap across all themes (rich topography, towns, villages & boundaries)
   tileLayer = L.tileLayer(tileUrl, {
     maxZoom: 18,
     subdomains: ['a', 'b', 'c']
@@ -177,8 +226,11 @@ function updateRadarMap(lat, lon, locationName, probability, microZones, isKarna
 
   if (!radarMap) return;
 
-  // Smooth fly to new station location (zoom 10 if in Karnataka, zoom 7 if outside so the user sees real geographical location)
-  radarMap.flyTo([lat, lon], isKarnataka ? 10 : 7, { duration: 1.2 });
+  // Taluk-level zoom target:
+  // Zoom 12.5 spans ~18 km width x 10 km height on the radar container,
+  // framing strictly the active Taluk (e.g. Mangalore Taluk or Puttur Taluk).
+  const targetZoom = isKarnataka ? 12.5 : 7.0;
+  radarMap.flyTo([lat, lon], targetZoom, { duration: 1.2 });
 
   if (radarLayersGroup) radarLayersGroup.clearLayers();
   if (stationMarkersGroup) stationMarkersGroup.clearLayers();
@@ -186,70 +238,7 @@ function updateRadarMap(lat, lon, locationName, probability, microZones, isKarna
   const hasProb = isKarnataka && (probability !== null && probability !== undefined);
   const prob = hasProb ? parseFloat(probability) : 0;
 
-  // 1. Concentric S-Band Doppler Radar Range Rings (ONLY if inside Karnataka)
-  if (isKarnataka) {
-    const ringColor = hasProb
-      ? (prob >= 70 ? 'rgba(217, 83, 79, 0.45)' : (prob >= 35 ? 'rgba(229, 169, 60, 0.45)' : 'rgba(94, 140, 104, 0.45)'))
-      : 'rgba(160, 150, 140, 0.35)';
-
-    L.circle([lat, lon], {
-      radius: 25000,
-      color: ringColor,
-      weight: 1.5,
-      dashArray: '4, 4',
-      fill: false
-    }).bindTooltip("25 km Range", { permanent: false, direction: "top" }).addTo(radarLayersGroup);
-
-    L.circle([lat, lon], {
-      radius: 50000,
-      color: ringColor,
-      weight: 1.2,
-      dashArray: '6, 6',
-      fill: false
-    }).bindTooltip("50 km Range", { permanent: false, direction: "top" }).addTo(radarLayersGroup);
-
-    L.circle([lat, lon], {
-      radius: 100000,
-      color: ringColor,
-      weight: 1.0,
-      dashArray: '8, 8',
-      fill: false
-    }).bindTooltip("100 km S-Band Max Scan", { permanent: false, direction: "top" }).addTo(radarLayersGroup);
-  }
-
-  // 2. Simulated Convective Reflectivity Intensity Contours (ONLY if inside Karnataka & has probability)
-  if (hasProb) {
-    if (prob >= 25.0) {
-      // Outer convective envelope (Sage/Honey: ~35 dBZ)
-      L.circle([lat, lon], {
-        radius: 18000,
-        color: '#5E8C68',
-        fillColor: '#5E8C68',
-        fillOpacity: 0.22,
-        weight: 1.2
-      }).addTo(radarLayersGroup);
-
-      // Mid convective cell (Honey: ~45 dBZ)
-      L.circle([lat + 0.03, lon - 0.02], {
-        radius: 11000,
-        color: '#E5A93C',
-        fillColor: '#E5A93C',
-        fillOpacity: 0.35,
-        weight: 1.2
-      }).addTo(radarLayersGroup);
-    }
-
-    if (prob >= 60.0) {
-      // Severe Convective Core (Terracotta / Crimson: 55-65 dBZ)
-      L.circle([lat + 0.015, lon - 0.01], {
-        radius: 6500,
-        color: '#D9534F',
-        fillColor: '#D9534F',
-        fillOpacity: 0.55,
-        weight: 1.8
-      }).addTo(radarLayersGroup);
-    }
-  }
+  // Circles removed per user request: Clean, unobstructed OpenStreetMap view
 
   // 3. Focal Station Marker
   const mainDotClass = hasProb
@@ -294,17 +283,17 @@ function updateRadarMap(lat, lon, locationName, probability, microZones, isKarna
       let zLon = zone.lon;
 
       if (!zLat || !zLon) {
-        const angles = [0.4, 2.0, 3.6, 5.2];
+        const angles = [0.4, 1.8, 3.2, 4.8];
         const angle = angles[idx % angles.length];
-        zLat = lat + (0.11 * Math.cos(angle));
-        zLon = lon + (0.13 * Math.sin(angle));
+        zLat = lat + (0.038 * Math.cos(angle));
+        zLon = lon + (0.042 * Math.sin(angle));
       }
 
-      // Check distance from focal point (if under ~2.5 km, nudge outwards to prevent label overlap)
+      // Check distance from focal point (if under ~1.2 km, nudge slightly to prevent label overlap)
       const distFromCenter = Math.hypot(zLat - lat, zLon - lon);
-      if (distFromCenter < 0.02) {
-        if (zLat >= lat) zLat += 0.032;
-        else zLat -= 0.032;
+      if (distFromCenter < 0.012) {
+        if (zLat >= lat) zLat += 0.016;
+        else zLat -= 0.016;
       }
 
       const zProb = (zone.probability !== null && zone.probability !== undefined) ? parseFloat(zone.probability) : prob;
@@ -344,7 +333,7 @@ function updateRadarMap(lat, lon, locationName, probability, microZones, isKarna
  */
 function centerMapOnCurrentLocation() {
   if (radarMap && currentRadarCenter) {
-    radarMap.flyTo(currentRadarCenter, 10, { duration: 0.8 });
+    radarMap.flyTo(currentRadarCenter, 12.5, { duration: 0.8 });
   }
 }
 
@@ -417,6 +406,13 @@ function setIdleDashboardState() {
     overlay.style.display = 'none';
   }
 
+  // Ensure floating toast is dismissed on standby load
+  if (typeof window.closeStormToast === 'function') {
+    window.closeStormToast();
+  } else {
+    closeStormToast();
+  }
+
   const alertEl = document.getElementById('riskAlertBanner');
   const alertText = document.getElementById('riskAlertText');
   if (alertEl) alertEl.className = 'risk-alert-pill alert-idle';
@@ -429,7 +425,7 @@ function setIdleDashboardState() {
   if (fillArc) fillArc.style.strokeDashoffset = '314';
 
   const addressEl = document.getElementById('resolvedAddressText');
-  if (addressEl) addressEl.textContent = 'Search any Karnataka place above (e.g. Puttur, Bengaluru, Udupi)';
+  if (addressEl) addressEl.textContent = `Observatory set to ${currentLocation || 'Karnataka'} • Click Predict to evaluate live convective storm conditions`;
 
   const conditionEl = document.getElementById('conditionVal');
   if (conditionEl) conditionEl.textContent = 'Awaiting Query';
@@ -488,6 +484,9 @@ function setIdleDashboardState() {
 
   const outdoorEl = document.getElementById('geminiOutdoorText');
   if (outdoorEl) outdoorEl.textContent = 'Awaiting location query...';
+
+  // Reset Thunderstorm Alert Panel to Idle
+  resetThunderstormAlertToIdle();
 }
 
 /**
@@ -689,6 +688,33 @@ function getFallbackNowcastData(location) {
       agriculture_advisory: "Cover open areca nut, pepper drying yards, and rubber harvests immediately. Clear field drainage channels to prevent flash waterlogging.",
       travel_safety_advisory: "Exercise caution on state highways due to sudden downdraft wind gusts and slick road surfaces. Do not shelter beneath isolated tall trees during lightning events.",
       aviation_outdoor_warning: "Moderate to severe low-level turbulence and cloud-to-ground lightning hazard expected within the next 45 to 90 minutes."
+    },
+    thunderstorm_alert: isOutside ? {
+      status: "unavailable",
+      level: "NONE",
+      probability: null,
+      location: location,
+      lead_time: "N/A",
+      headline: "No current thunderstorm alert data available",
+      explanation: `Warning: '${location}' is located outside Karnataka state boundary. Convective storm predictions are disabled for out-of-state sectors.`,
+      timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) + ' IST'
+    } : {
+      status: "active",
+      level: prob >= 70 ? "CRITICAL" : (prob >= 35 ? "MODERATE" : "LOW"),
+      probability: prob,
+      location: location,
+      lead_time: "+30 to +60 Mins",
+      headline: prob >= 70 
+        ? "High thunderstorm risk detected. Avoid exposed outdoor areas and monitor official weather warnings."
+        : (prob >= 35 
+            ? "Thunderstorm conditions may develop. Please monitor weather updates."
+            : "Low thunderstorm risk. Calm and stable weather expected across the region."),
+      explanation: prob >= 70 
+        ? `Critical convective atmospheric instability observed across ${location}. Intense lightning, heavy downbursts, and gusty winds anticipated within forecast window.`
+        : (prob >= 35 
+            ? `Elevated moisture and convective instability detected over ${location}. Towering cumulus development and sudden passing showers possible within forecast window.`
+            : `Boundary-layer thermodynamic energy over ${location} is stable. Convective storm initiation is not expected within the forecast window.`),
+      timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) + ' IST'
     }
   };
 }
@@ -822,6 +848,9 @@ function renderDashboard(data) {
 
   // 7. Gemini AI Meteorological Advisory
   renderGeminiAdvisory(gemini);
+
+  // 8. In-Dashboard Thunderstorm Alert Messages
+  renderThunderstormAlert(data);
 }
 
 
@@ -1076,13 +1105,13 @@ function renderPlacesDetails(data) {
       <span class="place-item-risk ${pillClass}">${zProb.toFixed(1)}%</span>
     `;
 
-    // Click to focus or pan
+    // Click to focus or zoom into the microzone
     row.addEventListener('click', () => {
       if (radarMap) {
         const destLat = zone.lat || data.latitude;
         const destLon = zone.lon || data.longitude;
         if (destLat && destLon) {
-          radarMap.panTo([destLat, destLon], { duration: 0.6 });
+          radarMap.flyTo([destLat, destLon], 13.5, { duration: 0.7 });
         }
       }
     });
@@ -1110,5 +1139,871 @@ function setLoadingState(isLoading) {
       searchBtn.disabled = false;
       searchBtn.style.opacity = '1';
     }
+  }
+}
+
+
+/**
+ * Reset Thunderstorm Alert Notification Panel to Idle / Standby
+ */
+function resetThunderstormAlertToIdle() {
+  lastThunderstormAlertSig = null;
+  const panel = document.getElementById('thunderstormAlertBanner');
+  if (!panel) return;
+
+  panel.className = 'thunderstorm-alert-panel alert-state-idle';
+
+  const iconText = document.getElementById('alertIconText');
+  if (iconText) iconText.textContent = '⚡';
+
+  const severityPill = document.getElementById('alertSeverityPill');
+  if (severityPill) severityPill.textContent = 'System Standby';
+
+  const riskPill = document.getElementById('alertRiskPill');
+  if (riskPill) riskPill.style.display = 'none';
+
+  const locPill = document.getElementById('alertLocationPill');
+  if (locPill) locPill.style.display = 'none';
+
+  const leadPill = document.getElementById('alertLeadTimePill');
+  if (leadPill) leadPill.style.display = 'none';
+
+  const headlineEl = document.getElementById('alertHeadlineTitle');
+  if (headlineEl) headlineEl.textContent = 'No current thunderstorm alert data available';
+
+  const explanationEl = document.getElementById('alertExplanationText');
+  if (explanationEl) explanationEl.textContent = 'Select or search any Karnataka location above and click "Predict" to evaluate live convective storm conditions.';
+
+  const timestampEl = document.getElementById('alertTimestamp');
+  if (timestampEl) timestampEl.textContent = 'Awaiting Query';
+}
+
+
+/**
+ * Render In-Dashboard Thunderstorm Alert Notification Panel
+ * Connects directly to existing GBDT predictions & timeline lead times.
+ * Avoids re-triggering / flickering if prediction has not changed.
+ */
+function renderThunderstormAlert(data) {
+  const panel = document.getElementById('thunderstormAlertBanner');
+
+  let alertObj = data.thunderstorm_alert;
+
+  // Client-side fallback if server payload did not include thunderstorm_alert
+  if (!alertObj) {
+    const isKa = (data.is_karnataka !== false && !data.warning);
+    const pred = data.prediction || {};
+    const prob = pred.convective_probability;
+
+    if (isKa && prob !== null && prob !== undefined && !isNaN(prob)) {
+      const p = parseFloat(prob);
+      let lvl = 'LOW';
+      let headline = 'Low thunderstorm risk. Calm and stable weather expected across the region.';
+      let exp = `Boundary-layer thermodynamic energy over ${data.location || 'the area'} is stable. Convective storm initiation is not expected within the forecast window.`;
+
+      if (p >= 70.0) {
+        lvl = 'CRITICAL';
+        headline = 'High thunderstorm risk detected. Avoid exposed outdoor areas and monitor official weather warnings.';
+        exp = `Critical convective atmospheric instability observed across ${data.location || 'the area'}. Intense lightning, heavy downbursts, and gusty winds anticipated.`;
+      } else if (p >= 35.0) {
+        lvl = 'MODERATE';
+        headline = 'Thunderstorm conditions may develop. Please monitor weather updates.';
+        exp = `Elevated moisture and convective instability detected over ${data.location || 'the area'}. Towering cumulus development and sudden passing showers possible.`;
+      }
+
+      alertObj = {
+        status: 'active',
+        level: lvl,
+        probability: p,
+        location: data.location,
+        lead_time: '+30 to +90 Mins',
+        headline: headline,
+        explanation: exp,
+        timestamp: data.timestamp || 'Live'
+      };
+    } else {
+      alertObj = {
+        status: 'unavailable',
+        level: 'NONE',
+        probability: null,
+        location: data.location,
+        lead_time: 'N/A',
+        headline: 'No current thunderstorm alert data available',
+        explanation: data.warning || 'Select or search any Karnataka location to evaluate live convective storm conditions.',
+        timestamp: data.timestamp || 'Live'
+      };
+    }
+  }
+
+  currentActiveAlert = alertObj;
+
+  // Deduplication check: Avoid re-rendering if exact same prediction is active
+  const alertSig = `${alertObj.status}_${alertObj.level}_${alertObj.probability}_${alertObj.location}_${alertObj.lead_time}_${alertObj.headline}`;
+  if (alertSig === lastThunderstormAlertSig) {
+    return; // No change in prediction state
+  }
+  lastThunderstormAlertSig = alertSig;
+
+  const iconText = document.getElementById('alertIconText');
+  const severityPill = document.getElementById('alertSeverityPill');
+  const riskPill = document.getElementById('alertRiskPill');
+  const riskVal = document.getElementById('alertRiskValue');
+  const locPill = document.getElementById('alertLocationPill');
+  const locName = document.getElementById('alertLocationName');
+  const leadPill = document.getElementById('alertLeadTimePill');
+  const leadTimeText = document.getElementById('alertLeadTimeText');
+  const headlineEl = document.getElementById('alertHeadlineTitle');
+  const explanationEl = document.getElementById('alertExplanationText');
+  const timestampEl = document.getElementById('alertTimestamp');
+
+  // Case 1: Out of bounds, error, or no valid prediction available
+  if (alertObj.status === 'unavailable' || alertObj.level === 'NONE' || alertObj.probability === null) {
+    if (panel) panel.className = 'thunderstorm-alert-panel alert-state-idle';
+    if (iconText) iconText.textContent = 'ℹ️';
+    if (severityPill) severityPill.textContent = 'No Active Alert';
+    if (riskPill) riskPill.style.display = 'none';
+
+    if (locPill) {
+      if (alertObj.location) {
+        locPill.style.display = 'inline-flex';
+        if (locName) locName.textContent = alertObj.location;
+      } else {
+        locPill.style.display = 'none';
+      }
+    }
+
+    if (leadPill) leadPill.style.display = 'none';
+    if (headlineEl) headlineEl.textContent = alertObj.headline || 'No current thunderstorm alert data available';
+    if (explanationEl) explanationEl.textContent = alertObj.explanation || 'Select or search any Karnataka location to evaluate live convective storm conditions.';
+    if (timestampEl) timestampEl.textContent = alertObj.timestamp || 'Live';
+    return;
+  }
+
+  // Case 2: Valid prediction with risk level (LOW, MODERATE, CRITICAL)
+  const lvl = alertObj.level.toUpperCase();
+
+  if (lvl === 'CRITICAL') {
+    if (panel) panel.className = 'thunderstorm-alert-panel alert-state-critical';
+    if (iconText) iconText.textContent = '⚡🚨';
+    if (severityPill) severityPill.textContent = 'CRITICAL ALERT (≥70%)';
+  } else if (lvl === 'MODERATE') {
+    if (panel) panel.className = 'thunderstorm-alert-panel alert-state-moderate';
+    if (iconText) iconText.textContent = '⚠️';
+    if (severityPill) severityPill.textContent = 'MODERATE ALERT (35%–70%)';
+  } else {
+    if (panel) panel.className = 'thunderstorm-alert-panel alert-state-low';
+    if (iconText) iconText.textContent = '🛡️';
+    if (severityPill) severityPill.textContent = 'LOW RISK (<35%)';
+  }
+
+  // Risk % Pill
+  if (riskPill && riskVal) {
+    riskPill.style.display = 'inline-flex';
+    riskVal.textContent = alertObj.probability !== null && alertObj.probability !== undefined
+      ? `${Number(alertObj.probability).toFixed(1)}%`
+      : '--%';
+  }
+
+  // Affected Location Pill
+  if (locPill && locName) {
+    if (alertObj.location) {
+      locPill.style.display = 'inline-flex';
+      locName.textContent = alertObj.location;
+    } else {
+      locPill.style.display = 'none';
+    }
+  }
+
+  // Forecast Lead Time Pill (+30m, +60m, +90m)
+  if (leadPill && leadTimeText) {
+    if (alertObj.lead_time && alertObj.lead_time !== 'N/A') {
+      leadPill.style.display = 'inline-flex';
+      leadTimeText.textContent = alertObj.lead_time;
+    } else {
+      leadPill.style.display = 'none';
+    }
+  }
+
+  // Clear Title and Description
+  if (headlineEl) headlineEl.textContent = alertObj.headline;
+  if (explanationEl) explanationEl.textContent = alertObj.explanation;
+  if (timestampEl) timestampEl.textContent = `Issued: ${alertObj.timestamp || 'Live'}`;
+
+  // If Critical or Moderate, trigger floating toast notification alert and auto-broadcast to registered citizens
+  if (lvl === 'CRITICAL' || lvl === 'MODERATE') {
+    if (typeof window.displayThunderstormBroadcast === 'function') {
+      window.displayThunderstormBroadcast(alertObj);
+    } else {
+      showStormToast(alertObj);
+    }
+    autoBroadcastThunderstormAlert(alertObj);
+  } else {
+    closeStormToast();
+  }
+}
+
+/**
+ * Display floating on-screen Thunderstorm Alert Toast
+ */
+function showStormToast(alertObj) {
+  const toast = document.getElementById('stormToastNotification');
+  if (!toast) return;
+
+  const msg = document.getElementById('toastMessage');
+  const risk = document.getElementById('toastRisk');
+  const loc = document.getElementById('toastLoc');
+  const time = document.getElementById('toastTime');
+  const title = toast.querySelector('.toast-title');
+
+  if (alertObj.level === 'CRITICAL') {
+    if (title) title.textContent = 'CRITICAL THUNDERSTORM ALERT';
+    toast.style.borderColor = 'var(--accent-terracotta)';
+  } else if (alertObj.level === 'MODERATE') {
+    if (title) title.textContent = 'MODERATE THUNDERSTORM WATCH';
+    toast.style.borderColor = 'var(--accent-honey)';
+  } else {
+    toast.style.display = 'none';
+    return;
+  }
+
+  if (msg) msg.textContent = alertObj.headline || 'Thunderstorm conditions detected.';
+  if (risk) risk.textContent = alertObj.probability ? `${Number(alertObj.probability).toFixed(1)}% Risk` : '--%';
+  if (loc) loc.textContent = alertObj.location || 'Karnataka';
+  if (time) time.textContent = alertObj.lead_time || '+30m';
+
+  toast.style.display = 'block';
+
+  // Auto-dismiss after 12 seconds
+  if (window.toastTimeout) clearTimeout(window.toastTimeout);
+  window.toastTimeout = setTimeout(() => {
+    toast.style.display = 'none';
+  }, 12000);
+}
+
+/**
+ * Dismiss floating alert toast
+ */
+function closeStormToast() {
+  const toast = document.getElementById('stormToastNotification');
+  if (toast) toast.style.display = 'none';
+  if (currentActiveAlert && (currentActiveAlert.id || currentActiveAlert._id)) {
+    try {
+      const aId = currentActiveAlert.id || currentActiveAlert._id;
+      localStorage.setItem('dismissed_alert_' + aId, '1');
+      sessionStorage.setItem('dismissed_alert_' + aId, '1');
+    } catch (e) {}
+  }
+}
+
+
+/* ==========================================================================
+   Presentation & Evaluator Thunderstorm Simulation Engine
+   ========================================================================== */
+
+/**
+ * Interactive Presentation & Evaluator Thunderstorm Simulator
+ * Instantly generates coordinated convective storm telemetry,
+ * Doppler radar storm cell reflectivity, and alert notifications.
+ */
+async function triggerPresentationDemo(scenario) {
+  // Clear alert deduplication signature so it always animates immediately
+  lastThunderstormAlertSig = null;
+
+  const inputEl = document.getElementById('locationInput');
+  const loc = (inputEl && inputEl.value.trim()) ? inputEl.value.trim() : (currentLocation || 'Puttur');
+  currentLocation = loc;
+  let lat = (currentRadarCenter && currentRadarCenter[0]) ? currentRadarCenter[0] : 12.7667;
+  let lon = (currentRadarCenter && currentRadarCenter[1]) ? currentRadarCenter[1] : 75.2016;
+
+  // Show "Reset to Live" button
+  const liveBtn = document.getElementById('btnRestoreLive');
+  if (liveBtn) liveBtn.style.display = 'inline-flex';
+
+  try {
+    const res = await fetch(`/api/demo/thunderstorm?scenario=${encodeURIComponent(scenario)}&location=${encodeURIComponent(loc)}`);
+    if (res.ok) {
+      const serverDemoData = await res.json();
+      renderDashboard(serverDemoData);
+      return;
+    }
+  } catch (err) {
+    console.warn("Could not reach /api/demo/thunderstorm backend, using fallback:", err);
+  }
+
+  let demoData = null;
+  const nowTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }) + ' IST (Simulation Mode)';
+
+  if (scenario === 'critical') {
+    demoData = {
+      location: loc,
+      resolved_address: `${loc} Observatory, Dakshina Kannada, Karnataka (Severe Convective Simulation)`,
+      latitude: lat,
+      longitude: lon,
+      is_karnataka: true,
+      warning: null,
+      timestamp: nowTime,
+      telemetry: {
+        temp: 28.8,
+        humidity: 94.0,
+        dew: 27.6,
+        dpd: 1.2,
+        vpd: 0.3,
+        pressure: 1001.2,
+        pressure_drop: -3.8,
+        windspeed: 38.5,
+        winddir: 245,
+        cloudcover: 98.0,
+        conditions: "Severe Thunderstorm with Downdraft Gusts"
+      },
+      prediction: {
+        convective_probability: 88.5,
+        binary_prediction: 1,
+        risk_level: "CRITICAL (Severe Thunderstorm / Heavy Rain Alert)",
+        alert_code: "RED",
+        weather_condition: "Severe Thunderstorm with Intense Convective Discharges",
+        model_source: "Soft Voting Ensemble GBDT (Karnataka Calibrated)",
+        is_available: true
+      },
+      timeline: [
+        {
+          label: "+30 Mins Later",
+          time_label: "+30m Projection",
+          time_str: "+30m",
+          temp: 26.5,
+          humidity: 98,
+          cloudcover: 100,
+          conditions: "Critical Lightning Discharges & Intense Rain",
+          probability: 92.5,
+          windspeed: 42.0,
+          alert_code: "RED"
+        },
+        {
+          label: "+60 Mins Later",
+          time_label: "+60m Projection",
+          time_str: "+60m",
+          temp: 25.2,
+          humidity: 96,
+          cloudcover: 95,
+          conditions: "Heavy Downdraft Precipitation & Microbursts",
+          probability: 86.0,
+          windspeed: 36.0,
+          alert_code: "RED"
+        },
+        {
+          label: "+90 Mins Later",
+          time_label: "+90m Projection",
+          time_str: "+90m",
+          temp: 25.0,
+          humidity: 92,
+          cloudcover: 85,
+          conditions: "Passing Convective Cell & Dissipating Rain",
+          probability: 71.0,
+          windspeed: 24.0,
+          alert_code: "RED"
+        }
+      ],
+      micro_zones: (loc.toLowerCase().includes('mangalore') || loc.toLowerCase().includes('mangaluru')) ? [
+        { name: "Hampankatta (City Centre & Taluk Hub)", lat: 12.8700, lon: 74.8430, probability: 88.5, temp: 28.5, humidity: 94 },
+        { name: "Kadri Hills & Mallikatte Zone", lat: 12.8830, lon: 74.8620, probability: 86.0, temp: 28.8, humidity: 92 },
+        { name: "Surathkal & NITK Coastal Sector", lat: 13.0070, lon: 74.7940, probability: 91.5, temp: 27.8, humidity: 96 },
+        { name: "Panambur Port & Industrial Sector", lat: 12.9460, lon: 74.8120, probability: 89.2, temp: 28.1, humidity: 95 },
+        { name: "Ullal Coastal Belt & Estuary", lat: 12.8050, lon: 74.8520, probability: 85.0, temp: 28.6, humidity: 93 },
+        { name: "Bajpe Airport & Kavoor Corridor", lat: 12.9280, lon: 74.8720, probability: 87.8, temp: 28.2, humidity: 94 }
+      ] : [
+        { name: "Puttur Town & Bus Stand (Taluk Centre)", lat: 12.7667, lon: 75.2016, probability: 88.5, temp: 28.8, humidity: 94 },
+        { name: "Darbe Commercial Sector", lat: 12.7580, lon: 75.2050, probability: 87.0, temp: 29.0, humidity: 93 },
+        { name: "Kabaka & Polya Agricultural Zone", lat: 12.7880, lon: 75.1850, probability: 90.5, temp: 28.4, humidity: 96 },
+        { name: "Bannur & Kemminje Green Corridor", lat: 12.7520, lon: 75.2210, probability: 86.5, temp: 28.9, humidity: 93 },
+        { name: "Aryapu & Balnadu Rural Valley", lat: 12.7350, lon: 75.1750, probability: 89.0, temp: 28.5, humidity: 95 },
+        { name: "Bettampady & Ariyadka Foothills", lat: 12.7150, lon: 75.2280, probability: 85.0, temp: 28.2, humidity: 96 }
+      ],
+      gemini_advisory: {
+        status: "success",
+        model: "Gemini AI + Karnataka Convective Ensemble (Severe Storm Simulation)",
+        synoptic_bulletin: `Severe convective storm cell initiation confirmed over ${loc}. Atmospheric thermodynamics indicate extreme instability (CAPE > 2900 J/kg) coupled with active orographic lifting along the Western Ghats. Radar reflectivity echoes exceed 55 dBZ with violent cloud-to-ground lightning discharges, localized microburst downdrafts, and torrential rain rates.`,
+        ai_risk_assessment: "CRITICAL",
+        agriculture_advisory: `Immediate protective protocol for areca nut, rubber, and paddy plantations in ${loc} and surrounding taluks: clear roadside drainage culverts immediately and secure all harvested crops from direct squall exposure.`,
+        travel_safety_advisory: `CRITICAL TRAVEL WARNING: Hazardous transit on State Highway 88 and Ghat passes. Sudden gale-force downdrafts (35-50 km/h) and blinding rain will severely diminish vehicular braking distance. Avoid parking beneath tall roadside trees.`,
+        aviation_outdoor_warning: `SEVERE DANGER: Severe low-level wind shear and frequent cloud-to-ground lightning strokes detected within a 25 km radius. Suspend all drone surveys and outdoor sports immediately.`
+      },
+      thunderstorm_alert: {
+        status: "active",
+        level: "CRITICAL",
+        probability: 88.5,
+        location: loc,
+        lead_time: "+30m Projection",
+        headline: "High thunderstorm risk detected. Avoid exposed outdoor areas and monitor official weather warnings.",
+        explanation: `Critical convective atmospheric instability observed across ${loc}. Intense lightning, heavy downbursts, and gusty winds anticipated within +30m Projection.`,
+        timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) + ' IST (Simulation)'
+      }
+    };
+  } else if (scenario === 'moderate') {
+    demoData = {
+      location: loc,
+      resolved_address: `${loc} Observatory, Karnataka (Convective Watch Simulation)`,
+      latitude: lat,
+      longitude: lon,
+      is_karnataka: true,
+      warning: null,
+      timestamp: nowTime,
+      telemetry: {
+        temp: 30.2,
+        humidity: 82.0,
+        dew: 25.8,
+        dpd: 4.4,
+        vpd: 0.9,
+        pressure: 1005.1,
+        pressure_drop: -1.6,
+        windspeed: 18.0,
+        winddir: 210,
+        cloudcover: 72.0,
+        conditions: "Towering Cumulus / Developing Thunderstorm Cell"
+      },
+      prediction: {
+        convective_probability: 54.2,
+        binary_prediction: 1,
+        risk_level: "MODERATE (Thunderstorm Watch / Cell Initiation)",
+        alert_code: "YELLOW",
+        weather_condition: "Developing Convective Cloud Tower",
+        model_source: "Soft Voting Ensemble GBDT (Karnataka Calibrated)",
+        is_available: true
+      },
+      timeline: [
+        {
+          label: "+30 Mins Later",
+          time_label: "+30m Projection",
+          time_str: "+30m",
+          temp: 29.5,
+          humidity: 85,
+          cloudcover: 78,
+          conditions: "Towering Cumulus Initiation",
+          probability: 48.0,
+          windspeed: 16.0,
+          alert_code: "YELLOW"
+        },
+        {
+          label: "+60 Mins Later",
+          time_label: "+60m Projection",
+          time_str: "+60m",
+          temp: 28.6,
+          humidity: 89,
+          cloudcover: 86,
+          conditions: "Isolated Convective Showers Possible",
+          probability: 58.5,
+          windspeed: 22.0,
+          alert_code: "YELLOW"
+        },
+        {
+          label: "+90 Mins Later",
+          time_label: "+90m Projection",
+          time_str: "+90m",
+          temp: 27.8,
+          humidity: 88,
+          cloudcover: 80,
+          conditions: "Localized Passing Rain",
+          probability: 51.0,
+          windspeed: 18.0,
+          alert_code: "YELLOW"
+        }
+      ],
+      micro_zones: [
+        { name: `${loc} Center`, lat: lat, lon: lon, probability: 54.2, temp: 30.2, humidity: 82 },
+        { name: `${loc} North`, lat: lat + 0.03, lon: lon, probability: 58.0, temp: 29.8, humidity: 84 },
+        { name: `${loc} South`, lat: lat - 0.03, lon: lon, probability: 49.5, temp: 30.5, humidity: 80 }
+      ],
+      gemini_advisory: {
+        status: "success",
+        model: "Gemini AI + Karnataka Convective Ensemble (Watch Simulation)",
+        synoptic_bulletin: `Moderate convective instability developing over ${loc}. Rising daytime insolation and boundary-layer moisture convergence are generating towering cumulus clouds along local ridgelines. Isolated lightning and sudden passing showers may occur within the next 45 to 90 minutes.`,
+        ai_risk_assessment: "MODERATE",
+        agriculture_advisory: `Favorable moisture for plantation crops, but prepare cover for drying produce in open yards as brief passing showers are anticipated.`,
+        travel_safety_advisory: `Roads remain generally clear with moderate crosswinds. Watch for wet asphalt on shaded forest stretches.`,
+        aviation_outdoor_warning: `Monitor localized thermal updrafts. Low risk of direct lightning currently, but maintain vigilance.`
+      },
+      thunderstorm_alert: {
+        status: "active",
+        level: "MODERATE",
+        probability: 54.2,
+        location: loc,
+        lead_time: "+60m Projection",
+        headline: "Thunderstorm conditions may develop. Please monitor weather updates.",
+        explanation: `Elevated moisture and convective instability detected over ${loc}. Towering cumulus development and sudden passing showers possible within +60m Projection.`,
+        timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) + ' IST (Simulation)'
+      }
+    };
+  } else {
+    // Low / Calm weather
+    demoData = {
+      location: loc,
+      resolved_address: `${loc} Observatory, Karnataka (Stable Weather Simulation)`,
+      latitude: lat,
+      longitude: lon,
+      is_karnataka: true,
+      warning: null,
+      timestamp: nowTime,
+      telemetry: {
+        temp: 27.5,
+        humidity: 62.0,
+        dew: 19.5,
+        dpd: 8.0,
+        vpd: 1.8,
+        pressure: 1012.0,
+        pressure_drop: 0.2,
+        windspeed: 8.5,
+        winddir: 180,
+        cloudcover: 15.0,
+        conditions: "Clear & Stable Atmosphere"
+      },
+      prediction: {
+        convective_probability: 16.5,
+        binary_prediction: 0,
+        risk_level: "LOW (Stable Boundary Layer)",
+        alert_code: "GREEN",
+        weather_condition: "Calm & Stable Weather",
+        model_source: "Soft Voting Ensemble GBDT (Karnataka Calibrated)",
+        is_available: true
+      },
+      timeline: [
+        { label: "+30 Mins Later", time_label: "+30m Projection", time_str: "+30m", temp: 27.2, humidity: 64, cloudcover: 15, conditions: "Clear Sky", probability: 15.0, windspeed: 8.0, alert_code: "GREEN" },
+        { label: "+60 Mins Later", time_label: "+60m Projection", time_str: "+60m", temp: 26.8, humidity: 66, cloudcover: 20, conditions: "Scattered Clouds", probability: 17.5, windspeed: 7.5, alert_code: "GREEN" },
+        { label: "+90 Mins Later", time_label: "+90m Projection", time_str: "+90m", temp: 26.2, humidity: 68, cloudcover: 20, conditions: "Stable Airflow", probability: 16.0, windspeed: 6.8, alert_code: "GREEN" }
+      ],
+      micro_zones: [
+        { name: `${loc} Main`, lat: lat, lon: lon, probability: 16.5, temp: 27.5, humidity: 62 }
+      ],
+      gemini_advisory: {
+        status: "success",
+        model: "Gemini AI + Karnataka Convective Ensemble (Stable Simulation)",
+        synoptic_bulletin: `Atmospheric boundary layer over ${loc} exhibits stable thermodynamic stratification. Dew point depression (8.0°C) and steady barometric pressure indicate negligible convective initiation potential. Clear sky conditions prevailing.`,
+        ai_risk_assessment: "LOW",
+        agriculture_advisory: "Ideal dry weather conditions for plantation fieldwork, pesticide spraying, and crop processing.",
+        travel_safety_advisory: "Dry road surfaces and optimal visibility across all regional transport routes.",
+        aviation_outdoor_warning: "Calm surface winds and unrestricted visibility. Perfect conditions for outdoor operations."
+      },
+      thunderstorm_alert: {
+        status: "active",
+        level: "LOW",
+        probability: 16.5,
+        location: loc,
+        lead_time: "+30 to +90 Mins",
+        headline: "Low thunderstorm risk. Calm and stable weather expected across the region.",
+        explanation: `Boundary-layer thermodynamic energy over ${loc} is stable. Convective storm initiation is not expected within the forecast window.`,
+        timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) + ' IST (Simulation)'
+      }
+    };
+  }
+
+  // Render simulated scenario across all dashboard components
+  renderDashboard(demoData);
+}
+
+let isPresentationDemoActive = false;
+
+const NAV_STORM_SVG_IDLE = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>';
+const NAV_STORM_SVG_ACTIVE = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>';
+
+/**
+ * Single-button navbar toggle for thunderstorm simulation & live reset
+ */
+function togglePresentationDemo() {
+  const btnText = document.getElementById('navStormAlertText');
+  const navBtn = document.getElementById('btnNavStormAlert');
+
+  if (isPresentationDemoActive) {
+    isPresentationDemoActive = false;
+    if (btnText) btnText.innerHTML = NAV_STORM_SVG_IDLE;
+    if (navBtn) {
+      navBtn.classList.remove('active-demo');
+      navBtn.title = 'Toggle Severe Thunderstorm Alert Simulation (88.5%)';
+    }
+    restoreLiveTelemetry();
+  } else {
+    isPresentationDemoActive = true;
+    if (btnText) btnText.innerHTML = NAV_STORM_SVG_ACTIVE;
+    if (navBtn) {
+      navBtn.classList.add('active-demo');
+      navBtn.title = 'Reset to Live Nowcast Radar & Telemetry';
+    }
+    triggerPresentationDemo('critical');
+  }
+}
+
+/**
+ * Restore Live Telemetry from Open-Meteo & Gemini AI
+ */
+function restoreLiveTelemetry() {
+  isPresentationDemoActive = false;
+  const btnText = document.getElementById('navStormAlertText');
+  const navBtn = document.getElementById('btnNavStormAlert');
+  if (btnText) btnText.innerHTML = NAV_STORM_SVG_IDLE;
+  if (navBtn) {
+    navBtn.classList.remove('active-demo');
+    navBtn.title = 'Toggle Severe Thunderstorm Alert Simulation (88.5%)';
+  }
+
+  const liveBtn = document.getElementById('btnRestoreLive');
+  if (liveBtn) liveBtn.style.display = 'none';
+
+  lastThunderstormAlertSig = null;
+
+  // Immediately close and dismiss floating storm toast
+  if (typeof window.closeStormToast === 'function') {
+    window.closeStormToast();
+  } else {
+    closeStormToast();
+  }
+
+  // Deactivate active alert on server/database so other clients stop receiving it
+  try {
+    fetch('/api/alerts/deactivate', { method: 'POST' }).catch(() => {});
+  } catch (e) {}
+
+  fetchNowcast(currentLocation || 'Puttur');
+}
+
+
+/* ==========================================================================
+   Automated Thunderstorm SMS & Email Emergency Broadcast Controller
+   ========================================================================== */
+
+/**
+ * Automatically broadcasts thunderstorm alert to registered citizens via Email & SMS
+ * without requiring the user or meteorologist to press any button.
+ */
+let lastAutoDispatchedSig = null;
+
+function autoBroadcastThunderstormAlert(alertObj) {
+  if (!alertObj || !alertObj.level || alertObj.level === 'LOW' || alertObj.level === 'NONE') return;
+
+  // The backend (/api/nowcast and /api/demo/thunderstorm) already handles the server-side dispatch.
+  // We simply update the toast UI to reflect live emergency broadcast status without double-dispatching.
+  const timeEl = document.getElementById('toastTime');
+  if (timeEl) {
+    timeEl.innerHTML = (alertObj.lead_time || '+30m') + ' &bull; <strong style="color: #2e7d32;">⚡ Alert Auto-Sent to Citizens</strong>';
+  }
+}
+
+/**
+ * Open the Thunderstorm Alert Dispatch Modal
+ */
+function openDispatchModal() {
+  const modal = document.getElementById('notificationDispatchModal');
+  if (!modal) return;
+
+  // Ensure an alert object is available
+  if (!currentActiveAlert || currentActiveAlert.status === 'unavailable') {
+    const inputEl = document.getElementById('locationInput');
+    const loc = (inputEl && inputEl.value.trim()) ? inputEl.value.trim() : (currentLocation || 'Puttur');
+    currentActiveAlert = {
+      status: 'active',
+      level: 'CRITICAL',
+      probability: 88.5,
+      location: loc,
+      lead_time: '+30m Projection',
+      headline: 'High thunderstorm risk detected. Avoid exposed outdoor areas and monitor official weather warnings.',
+      explanation: `Critical convective atmospheric instability observed across ${loc}. Intense lightning, heavy downbursts, and gusty winds anticipated.`,
+      timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }) + ' IST'
+    };
+  }
+
+  // Populate Summary Box
+  const lvlEl = document.getElementById('notifModalLevel');
+  const probEl = document.getElementById('notifModalProb');
+  const leadEl = document.getElementById('notifModalLead');
+  const locEl = document.getElementById('notifModalLocation');
+  const headEl = document.getElementById('notifModalHeadline');
+  const summaryBox = document.getElementById('notifAlertSummaryBox');
+
+  const lvl = (currentActiveAlert.level || 'CRITICAL').toUpperCase();
+  if (lvlEl) {
+    lvlEl.textContent = `${lvl} ALERT`;
+    lvlEl.className = `notif-badge-level level-${lvl.toLowerCase()}`;
+  }
+  if (summaryBox) {
+    summaryBox.className = `notif-alert-summary-box summary-${lvl.toLowerCase()}`;
+  }
+  if (probEl) {
+    const p = currentActiveAlert.probability;
+    probEl.textContent = (p !== null && p !== undefined) ? `${Number(p).toFixed(1)}% Storm Risk` : 'High Risk';
+  }
+  if (leadEl) {
+    leadEl.textContent = `⏱️ ${currentActiveAlert.lead_time || '+30m Projection'}`;
+  }
+  if (locEl) {
+    locEl.textContent = `📍 Affected Locality: ${currentActiveAlert.location || 'Karnataka'}`;
+  }
+  if (headEl) {
+    headEl.textContent = currentActiveAlert.headline || 'Convective storm warning active.';
+  }
+
+  modal.style.display = 'flex';
+}
+
+/**
+ * Close Dispatch Modal
+ */
+function closeDispatchModal() {
+  const modal = document.getElementById('notificationDispatchModal');
+  if (modal) modal.style.display = 'none';
+}
+
+/**
+ * Handle clicks outside modal content to dismiss
+ */
+function handleModalBackdropClick(event) {
+  if (event.target.id === 'notificationDispatchModal') {
+    closeDispatchModal();
+  }
+}
+
+/**
+ * Execute Emergency Broadcast via SMS & Email APIs
+ */
+async function executeAlertBroadcast() {
+  const chkSms = document.getElementById('chkChannelSms');
+  const chkEmail = document.getElementById('chkChannelEmail');
+  const btn = document.getElementById('btnExecuteDispatch');
+  const btnText = document.getElementById('btnExecuteText');
+
+  const chkTelegram = document.getElementById('chkChannelTelegram');
+  const channels = [];
+  if (chkSms && chkSms.checked) channels.push('sms');
+  if (chkEmail && chkEmail.checked) channels.push('email');
+  if (chkTelegram && chkTelegram.checked) channels.push('telegram');
+
+  if (channels.length === 0) {
+    alert('Please select at least one broadcast channel (Telegram, Email, or SMS).');
+    return;
+  }
+
+  if (btn) btn.disabled = true;
+  if (btnText) btnText.textContent = 'Transmitting Emergency Alerts to Citizens...';
+
+  try {
+    const payload = {
+      location: currentActiveAlert?.location || currentLocation || 'Puttur',
+      probability: currentActiveAlert?.probability ?? 88.5,
+      level: currentActiveAlert?.level || 'CRITICAL',
+      lead_time: currentActiveAlert?.lead_time || '+30m Projection',
+      headline: currentActiveAlert?.headline || 'High thunderstorm risk detected.',
+      explanation: currentActiveAlert?.explanation || 'Severe convective atmospheric instability observed.',
+      channels: channels,
+      force: true
+    };
+
+    const resp = await fetch('/api/notifications/dispatch', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await resp.json();
+
+    if (!resp.ok || !data.success) {
+      alert(`Dispatch Error: ${data.error || 'Could not broadcast alerts.'}`);
+      return;
+    }
+
+    // Render results into table
+    renderDispatchResults(data.dispatches || [], data.mode);
+
+  } catch (err) {
+    console.error('executeAlertBroadcast failed:', err);
+    alert(`Dispatch failed: ${err.message}`);
+  } finally {
+    if (btn) btn.disabled = false;
+    if (btnText) btnText.textContent = 'Broadcast Alerts to All Target Citizens';
+  }
+}
+
+/**
+ * Render notification receipts into modal table
+ */
+function renderDispatchResults(dispatches, mode) {
+  const area = document.getElementById('notifResultsArea');
+  const tbody = document.getElementById('notifResultsTbody');
+  const countBadge = document.getElementById('resultsCountBadge');
+  const headerTitle = document.getElementById('resultsHeaderTitle');
+
+  if (!area || !tbody) return;
+
+  tbody.innerHTML = '';
+  area.style.display = 'block';
+
+  if (headerTitle) {
+    headerTitle.textContent = mode === 'live'
+      ? 'Live Transmission Receipts (Delivered & Logged):'
+      : 'Transmission Receipts (MongoDB Recorded):';
+  }
+
+  if (countBadge) {
+    countBadge.textContent = `${dispatches.length} citizens reached`;
+  }
+
+  if (dispatches.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:16px; color:#82786f;">No target registered users found for this locality.</td></tr>`;
+    return;
+  }
+
+  dispatches.forEach(d => {
+    const tr = document.createElement('tr');
+
+    const smsBadge = d.sms_status === 'sent'
+      ? '<span class="status-badge status-sent">✓ Sent Live</span>'
+      : (d.sms_status === 'simulated'
+        ? '<span class="status-badge status-simulated">⚡ Simulation Logged</span>'
+        : (d.sms_status === 'skipped' ? '<span class="status-badge status-skipped">Skipped</span>' : '<span class="status-badge status-failed">Failed</span>'));
+
+    const emailBadge = d.email_status === 'sent'
+      ? '<span class="status-badge status-sent">✓ Sent Live</span>'
+      : (d.email_status === 'simulated'
+        ? '<span class="status-badge status-simulated">✉️ Simulation Logged</span>'
+        : (d.email_status === 'skipped' ? '<span class="status-badge status-skipped">Skipped</span>' : '<span class="status-badge status-failed">Failed</span>'));
+
+    tr.innerHTML = `
+      <td>
+        <div class="recipient-name">${d.username || 'Citizen'}</div>
+        <div class="recipient-meta">${d.email || ''} &bull; +91 ${d.mobile || ''}</div>
+      </td>
+      <td><span class="locality-chip">${d.locality || d.alert_location || 'Karnataka'}</span></td>
+      <td>${smsBadge}</td>
+      <td>${emailBadge}</td>
+      <td class="time-col">${d.timestamp_display || 'Just now'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/**
+ * Fetch and display notification history from MongoDB
+ */
+async function fetchAndShowHistory() {
+  openDispatchModal();
+  const area = document.getElementById('notifResultsArea');
+  const tbody = document.getElementById('notifResultsTbody');
+  const countBadge = document.getElementById('resultsCountBadge');
+  const headerTitle = document.getElementById('resultsHeaderTitle');
+
+  if (area) area.style.display = 'block';
+  if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:18px; color:#82786f;">Loading alert history from MongoDB...</td></tr>`;
+
+  try {
+    const res = await fetch('/api/notifications/history?limit=15');
+    const data = await res.json();
+
+    if (!data.success) {
+      if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:18px; color:#c62828;">Error loading history: ${data.error || 'Failed'}</td></tr>`;
+      return;
+    }
+
+    if (headerTitle) headerTitle.textContent = 'Past Emergency Alert Dispatches (MongoDB Audit History):';
+    if (countBadge) countBadge.textContent = `${data.count || data.history.length} records`;
+
+    renderDispatchResults(data.history || [], 'history');
+  } catch (err) {
+    console.error('fetchAndShowHistory error:', err);
+    if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:18px; color:#c62828;">Error fetching history: ${err.message}</td></tr>`;
   }
 }

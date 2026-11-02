@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
   
   <!-- Custom Stylesheet with Universal Loading Fallback -->
-  <link rel="stylesheet" id="aerocastCss" href="/static/css/style.css?v=dynamic_risk_colors_v3">
+  <link rel="stylesheet" id="aerocastCss" href="/static/css/style.css?v=loc_target_v26">
   <!-- Leaflet Map CSS with Fallback -->
   <link rel="stylesheet" id="leafletCss" href="/static/vendor/leaflet.css">
   <script>
@@ -21,10 +21,10 @@
       var path = window.location.pathname || '';
       var isInsideTemplates = path.indexOf('templates') !== -1;
       if (isFile) {
-        document.getElementById('aerocastCss').href = (isInsideTemplates ? '../static/css/style.css' : 'static/css/style.css') + '?v=dynamic_risk_colors_v3';
+        document.getElementById('aerocastCss').href = (isInsideTemplates ? '../static/css/style.css' : 'static/css/style.css') + '?v=loc_target_v26';
         document.getElementById('leafletCss').href = isInsideTemplates ? '../static/vendor/leaflet.css' : 'static/vendor/leaflet.css';
       } else if (isInsideTemplates) {
-        document.getElementById('aerocastCss').href = '../static/css/style.css?v=dynamic_risk_colors_v3';
+        document.getElementById('aerocastCss').href = '../static/css/style.css?v=loc_target_v26';
         document.getElementById('leafletCss').href = '../static/vendor/leaflet.css';
       }
     })();
@@ -36,7 +36,7 @@
     })();
   </script>
 </head>
-<body data-theme="light">
+<body data-theme="light" data-user-locality="{% if current_user and current_user.locality %}{{ current_user.locality }}{% endif %}">
   <script>
     (function() {
       var savedTheme = localStorage.getItem('aerocast_theme') || 'light';
@@ -45,6 +45,27 @@
   </script>
 
   <div class="app-wrapper">
+    <!-- Floating Thunderstorm Alert Toast Notification -->
+    <div id="stormToastNotification" class="storm-toast-notification" style="display: none;">
+      <div class="toast-header">
+        <span class="toast-icon">⚡🚨</span>
+        <span class="toast-title">CRITICAL THUNDERSTORM ALERT</span>
+        <button type="button" class="toast-close" onclick="closeStormToast()" title="Dismiss">&times;</button>
+      </div>
+      <div class="toast-body">
+        <p id="toastMessage" class="toast-msg">High thunderstorm risk detected. Avoid exposed outdoor areas and monitor official weather warnings.</p>
+        <div class="toast-meta">
+          <span id="toastRisk">88.5% Critical Risk</span> &bull; <span id="toastLoc">Puttur</span> &bull; <span id="toastTime">+30m Projection</span>
+        </div>
+        <div class="toast-action-row" style="margin-top: 10px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+          <button type="button" id="btnToastViewRadar" class="toast-action-btn" onclick="handleToastViewRadar()">
+            ⚡ View Live Storm Radar
+          </button>
+          <span id="toastBroadcastBadge" style="font-size: 0.72rem; color: #2e7d32; font-weight: 700;">📡 Broadcast to All Users</span>
+        </div>
+      </div>
+    </div>
+
 
     <!-- Fullscreen Convective Weather Prediction Loading Animation -->
     <div id="nowcastLoadingOverlay" class="loading-screen-overlay" style="display: none;">
@@ -145,8 +166,10 @@
       </div>
 
       <div class="header-actions">
-        <!-- Location Search Bar (Type any place in Karnataka freely) -->
-        <form id="locationSearchForm" class="location-search-form" onsubmit="handleLocationSearch(event)">
+        <!-- Search & Instant Storm Simulation Group -->
+        <div class="nav-search-group">
+          <!-- Location Search Bar (Type any place in Karnataka freely) -->
+          <form id="locationSearchForm" class="location-search-form" onsubmit="handleLocationSearch(event)">
           <div class="location-search-wrapper">
             <svg class="search-pin-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
@@ -156,7 +179,7 @@
               id="locationInput" 
               class="location-search-input" 
               placeholder="Search any place in Karnataka (e.g. Puttur, Bantwal, Udupi)..." 
-              value="Puttur" 
+              value="{% if current_user and current_user.locality %}{{ current_user.locality.split(',')[0].strip() }}{% else %}Puttur{% endif %}" 
               autocomplete="off" 
               list="karnatakaPlacesList"
             >
@@ -211,32 +234,70 @@
             <option value="Chamarajanagar">Chamarajanagar (Southern Kaveri)</option>
           </datalist>
         </form>
+        <!-- One-Click Instant Thunderstorm Alert Demonstration Button -->
+        <button type="button" class="nav-storm-alert-btn" id="btnNavStormAlert" onclick="togglePresentationDemo()" title="Toggle Severe Thunderstorm Alert Simulation (88.5%)">
+          <span id="navStormAlertText">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+          </span>
+        </button>
+        </div>
 
-        <!-- Theme Toggle Switch -->
-        <div class="theme-switch-container">
-          <button class="theme-switch-btn active" id="btnLight" onclick="setAppTheme('light')">
+        <!-- Controls, Theme & User Profile Group -->
+        <div class="nav-controls-group">
+          <!-- Theme Toggle Switch -->
+          <div class="theme-switch-container">
+          <button class="theme-switch-btn active" id="btnLight" onclick="setAppTheme('light')" title="Warm Beige Theme">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
               <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
             </svg>
-            <span>Beige</span>
           </button>
-          <button class="theme-switch-btn" id="btnDark" onclick="setAppTheme('dark')">
+          <button class="theme-switch-btn" id="btnDark" onclick="setAppTheme('dark')" title="Espresso Dark Theme">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
               <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
             </svg>
-            <span>Espresso</span>
           </button>
         </div>
+
+        <!-- History Navigation Button -->
+        <a href="/history" class="nav-about-btn" title="View Search & Nowcast History">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+            <path d="M12 7v5l4 2"/>
+          </svg>
+          <span>History</span>
+        </a>
 
         <!-- About Project Navigation Button -->
         <a href="/about" class="nav-about-btn" title="Learn about AeroCast AI & Atmospheric Physics Parameters">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
           </svg>
-          <span>About Project</span>
+          <span>About</span>
         </a>
+
+        <!-- User Authentication Status / Profile Icon -->
+        {% if current_user %}
+        <a href="/profile" class="nav-user-icon-btn" id="navUserProfileBtn" title="Observer Profile & Settings ({{ current_user.username }})">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </a>
+        {% else %}
+        <a href="/login" class="nav-user-icon-btn" title="Sign In">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </a>
+        {% endif %}
+        </div>
       </div>
     </header>
+
 
     <!-- Main Dynamic Canvas Grid -->
     <main class="main-dashboard-grid">
@@ -365,8 +426,8 @@
                 <!-- Real Leaflet Interactive Doppler Radar Map -->
                 <div id="radarLeafletMap" class="radar-leaflet-container"></div>
 
-                <!-- Doppler Radar dBZ Color Scale Legend -->
-                <div class="radar-legend-card">
+                <!-- Doppler Radar dBZ Color Scale Legend (hidden since circles removed) -->
+                <div class="radar-legend-card" style="display: none;">
                   <div class="radar-legend-title">Convective Reflectivity (dBZ)</div>
                   <div class="radar-legend-bar">
                     <div class="legend-seg seg-green" title="15-30 dBZ: Light Rain">15-30</div>
@@ -592,6 +653,107 @@
 
     </main>
 
+    <!-- Thunderstorm Alert Dispatch Modal (SMS & Email) -->
+    <div id="notificationDispatchModal" class="notif-modal-backdrop" style="display: none;" onclick="handleModalBackdropClick(event)">
+      <div class="notif-modal-card" role="dialog" aria-modal="true" aria-labelledby="notifModalTitle">
+        <div class="notif-modal-header">
+          <div class="notif-header-title-box">
+            <span class="notif-header-icon">🚨</span>
+            <div>
+              <h3 id="notifModalTitle" class="notif-modal-heading">Thunderstorm Alert Broadcast</h3>
+              <p class="notif-modal-subheading">Instant SMS & Email Emergency Transmission to Registered Citizens</p>
+            </div>
+          </div>
+          <button type="button" class="notif-modal-close" onclick="closeDispatchModal()" aria-label="Close modal">&times;</button>
+        </div>
+
+        <div class="notif-modal-body">
+          <!-- Active Alert Summary Pill Strip -->
+          <div class="notif-alert-summary-box" id="notifAlertSummaryBox">
+            <div class="summary-top">
+              <span class="notif-badge-level" id="notifModalLevel">CRITICAL ALERT</span>
+              <span class="notif-badge-prob" id="notifModalProb">88.5% Storm Probability</span>
+              <span class="notif-badge-lead" id="notifModalLead">⏱️ +30m Projection</span>
+            </div>
+            <div class="summary-location" id="notifModalLocation">📍 Affected Locality: Puttur, Dakshina Kannada</div>
+            <div class="summary-headline" id="notifModalHeadline">High thunderstorm risk detected. Avoid exposed outdoor areas and monitor official weather warnings.</div>
+          </div>
+
+          <!-- Channel Selection Checkboxes -->
+          <div class="notif-channels-section">
+            <span class="notif-section-label">Broadcast Channels:</span>
+            <div class="notif-channels-grid">
+              <label class="notif-channel-item">
+                <input type="checkbox" id="chkChannelSms" checked>
+                <div class="channel-info">
+                  <span class="channel-name">📱 SMS Emergency Alert</span>
+                  <span class="channel-desc">Free2SMS Indian Gateway / Twilio REST &bull; 160-char SMS</span>
+                </div>
+              </label>
+              <label class="notif-channel-item">
+                <input type="checkbox" id="chkChannelEmail" checked>
+                <div class="channel-info">
+                  <span class="channel-name">✉️ Email Synoptic Advisory</span>
+                  <span class="channel-desc">Responsive HTML Bulletin &bull; SMTP (Gmail / Outlook)</span>
+                </div>
+              </label>
+              <label class="notif-channel-item">
+                <input type="checkbox" id="chkChannelTelegram" checked>
+                <div class="channel-info">
+                  <span class="channel-name">⚡ Telegram Instant Push</span>
+                  <span class="channel-desc">Free live bot alerts &bull; @aerocast_alerts_bot</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Live Delivery vs Simulation Badge -->
+          <div class="notif-gateway-status">
+            <div class="gateway-icon">ℹ️</div>
+            <div class="gateway-text">
+              <strong>Zero-Failure Presentation Engine:</strong> Alerts dispatch via live SMTP & SMS if credentials are configured in <code>.env</code>; otherwise, realistic delivery receipts are logged to MongoDB for evaluation.
+            </div>
+          </div>
+
+          <!-- Dispatch Progress / Action -->
+          <div class="notif-action-row">
+            <button type="button" id="btnExecuteDispatch" class="btn-broadcast-now" onclick="executeAlertBroadcast()">
+              <span class="btn-icon">🚀</span>
+              <span id="btnExecuteText">Broadcast Alerts to All Target Citizens</span>
+            </button>
+            <button type="button" class="btn-view-history" onclick="fetchAndShowHistory()">
+              <span class="btn-icon">📜</span>
+              <span>History Log</span>
+            </button>
+          </div>
+
+          <!-- Live Dispatch Results Area -->
+          <div id="notifResultsArea" class="notif-results-area" style="display: none;">
+            <div class="results-header">
+              <span id="resultsHeaderTitle">Transmission Receipts (MongoDB Recorded):</span>
+              <span class="results-count" id="resultsCountBadge">0 delivered</span>
+            </div>
+            <div class="results-table-wrap">
+              <table class="notif-results-table">
+                <thead>
+                  <tr>
+                    <th>Recipient</th>
+                    <th>Locality</th>
+                    <th>SMS Delivery</th>
+                    <th>Email Bulletin</th>
+                    <th>Time</th>
+                  </tr>
+                </thead>
+                <tbody id="notifResultsTbody">
+                  <!-- Populated dynamically via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- Leaflet Map Script with Universal Loading Fallback -->
@@ -618,16 +780,18 @@
       var isFile = (window.location.protocol === 'file:');
       var path = window.location.pathname || '';
       var isInsideTemplates = path.indexOf('templates') !== -1;
-      var jsSrc = '/static/js/app.js?v=dynamic_risk_colors_v3';
+      var jsSrc = '/static/js/app.js?v=loc_target_v26';
       if (isFile) {
-        jsSrc = (isInsideTemplates ? '../static/js/app.js' : 'static/js/app.js') + '?v=dynamic_risk_colors_v3';
+        jsSrc = (isInsideTemplates ? '../static/js/app.js' : 'static/js/app.js') + '?v=loc_target_v26';
       } else if (isInsideTemplates) {
-        jsSrc = '../static/js/app.js?v=dynamic_risk_colors_v3';
+        jsSrc = '../static/js/app.js?v=loc_target_v26';
       }
       var s = document.createElement('script');
       s.src = jsSrc;
       document.body.appendChild(s);
     })();
   </script>
+  <!-- Real-time Thunderstorm Alert Broadcast Listener for All Users -->
+  <script src="/static/js/alerts_listener.js?v=loc_target_v26"></script>
 </body>
 </html>

@@ -176,13 +176,12 @@ KARNATAKA_CITY_COORDINATES = {
 
 KARNATAKA_SUB_LOCATIONS = {
     "mangalore": [
-        {"name": "Surathkal (NITK Coastal Belt)", "query": "Surathkal"},
-        {"name": "Panambur Port & Beach", "query": "Panambur"},
-        {"name": "Bajpe (Mangalore Airport Area)", "query": "Bajpe"},
-        {"name": "Kadri Hills & Park Zone", "query": "Kadri"},
-        {"name": "Hampankatta (City Centre)", "query": "Hampankatta", "is_center": True},
-        {"name": "Ullal Coastal Zone", "query": "Ullal"},
-        {"name": "Bendoorwell & Kankanady", "query": "Kankanady"}
+        {"name": "Hampankatta (City Centre & Taluk Hub)", "query": "Hampankatta", "is_center": True, "lat": 12.8700, "lon": 74.8430},
+        {"name": "Kadri Hills & Mallikatte Zone", "query": "Kadri", "lat": 12.8830, "lon": 74.8620},
+        {"name": "Surathkal & NITK Coastal Sector", "query": "Surathkal", "lat": 13.0070, "lon": 74.7940},
+        {"name": "Panambur Port & Industrial Sector", "query": "Panambur", "lat": 12.9460, "lon": 74.8120},
+        {"name": "Ullal Coastal Belt & Estuary", "query": "Ullal", "lat": 12.8050, "lon": 74.8520},
+        {"name": "Bajpe Airport & Kavoor Corridor", "query": "Bajpe", "lat": 12.9280, "lon": 74.8720}
     ],
     "bangalore": [
         {"name": "HAL Observatory & Indiranagar", "query": "Indiranagar"},
@@ -240,11 +239,12 @@ KARNATAKA_SUB_LOCATIONS = {
         {"name": "Gonikoppal & South Coorg", "query": "Gonikoppal"}
     ],
     "puttur": [
-        {"name": "Puttur Town Centre & Bus Stand", "query": "puttur", "is_center": True},
-        {"name": "Darbe & Bedrala Zone", "query": "darbe"},
-        {"name": "Nehru Nagar & Kabaka Zone", "query": "kabaka"},
-        {"name": "Vitla (Vittla) Town Belt", "query": "vitla"},
-        {"name": "Sullia Foothills Belt", "query": "sullia"}
+        {"name": "Puttur Town & Bus Stand (Taluk Centre)", "query": "puttur", "is_center": True, "lat": 12.7667, "lon": 75.2016},
+        {"name": "Darbe & Bedrala Commercial Sector", "query": "darbe", "lat": 12.7580, "lon": 75.2050},
+        {"name": "Kabaka & Polya Agricultural Zone", "query": "kabaka", "lat": 12.7880, "lon": 75.1850},
+        {"name": "Bannur & Kemminje Green Corridor", "query": "kemminje", "lat": 12.7520, "lon": 75.2210},
+        {"name": "Aryapu & Balnadu Rural Valley", "query": "aryapu", "lat": 12.7350, "lon": 75.1750},
+        {"name": "Bettampady & Ariyadka Foothills", "query": "bettampady", "lat": 12.7150, "lon": 75.2280}
     ]
 }
 

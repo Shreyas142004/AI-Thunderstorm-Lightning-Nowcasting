@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
   
   <!-- Stylesheet -->
-  <link rel="stylesheet" id="aerocastCss" href="/static/css/style.css?v=about_v1">
+  <link rel="stylesheet" id="aerocastCss" href="/static/css/style.css?v=loc_target_v26">
   <script>
     (function() {
       var savedTheme = localStorage.getItem('aerocast_theme') || 'light';
@@ -20,7 +20,7 @@
     })();
   </script>
 </head>
-<body data-theme="light">
+<body data-theme="light" data-user-locality="{% if current_user and current_user.locality %}{{ current_user.locality }}{% endif %}">
   <script>
     (function() {
       var savedTheme = localStorage.getItem('aerocast_theme') || 'light';
@@ -57,24 +57,49 @@
             <line x1="19" y1="12" x2="5" y2="12"></line>
             <polyline points="12 19 5 12 12 5"></polyline>
           </svg>
-          <span>Live Dashboard</span>
+          <span>Live Radar</span>
+        </a>
+
+        <!-- History Button -->
+        <a href="/history" class="nav-about-btn" title="View Search & Nowcast History">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+            <path d="M12 7v5l4 2"/>
+          </svg>
+          <span>History</span>
         </a>
 
         <!-- Theme Toggle Switch -->
         <div class="theme-switch-container">
-          <button class="theme-switch-btn active" id="btnLight" onclick="setAppTheme('light')">
+          <button class="theme-switch-btn active" id="btnLight" onclick="setAppTheme('light')" title="Warm Beige Theme">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
               <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
             </svg>
-            <span>Beige</span>
           </button>
-          <button class="theme-switch-btn" id="btnDark" onclick="setAppTheme('dark')">
+          <button class="theme-switch-btn" id="btnDark" onclick="setAppTheme('dark')" title="Espresso Dark Theme">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
               <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
             </svg>
-            <span>Espresso</span>
           </button>
         </div>
+
+        <!-- User Authentication Status / Profile Icon -->
+        {% if current_user %}
+        <a href="/profile" class="nav-user-icon-btn" id="navUserProfileBtn" title="Observer Profile & Settings ({{ current_user.username }})">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </a>
+        {% else %}
+        <a href="/login" class="nav-user-icon-btn" title="Sign In">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </a>
+        {% endif %}
       </div>
     </header>
 
@@ -526,6 +551,8 @@
       setAppTheme(savedTheme);
     })();
   </script>
+  <!-- Real-time Thunderstorm Alert Broadcast Listener for All Users -->
+  <script src="/static/js/alerts_listener.js?v=loc_target_v26"></script>
 </body>
 </html>
 

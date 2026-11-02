@@ -7,6 +7,9 @@
 Flask>=3.0.0
 Werkzeug>=3.0.0
 
+# Database & Persistence
+pymongo>=4.0.0
+
 # Scientific Computing & Data Manipulation
 numpy>=1.24.0
 pandas>=2.0.0

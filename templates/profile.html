@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Profile & Security Settings — AeroCast AI</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" id="aerocastCss" href="/static/css/style.css?v=loc_target_v26">
+  <script>
+    (function() {
+      var savedTheme = localStorage.getItem('aerocast_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
+</head>
+<body data-theme="light" data-user-locality="{% if current_user and current_user.locality %}{{ current_user.locality }}{% endif %}">
+  <script>
+    (function() {
+      var savedTheme = localStorage.getItem('aerocast_theme') || 'light';
+      document.body.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
+
+  <div class="app-wrapper">
+    <!-- Top Navigation Header -->
+    <header class="app-header">
+      <div class="brand">
+        <a href="/" style="display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit;">
+          <div class="brand-glyph">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+              <path d="m13 10-3 5h4l-2 5"/>
+            </svg>
+          </div>
+          <div>
+            <div class="brand-title-row">
+              <h1 class="brand-title">AeroCast AI</h1>
+              <span class="brand-badge">Karnataka Nowcast</span>
+            </div>
+            <span class="brand-sub">Observer Profile & Security Hub</span>
+          </div>
+        </a>
+      </div>
+
+      <div class="header-actions">
+        <!-- Back to Dashboard -->
+        <a href="/" class="nav-back-btn" title="Return to Live Nowcast Dashboard">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          <span>Live Radar</span>
+        </a>
+
+        <!-- History Button -->
+        <a href="/history" class="nav-about-btn" title="View Search & Nowcast History">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+            <path d="M12 7v5l4 2"/>
+          </svg>
+          <span>History</span>
+        </a>
+
+        <!-- Theme Toggle Switch -->
+        <div class="theme-switch-container">
+          <button class="theme-switch-btn active" id="btnLight" onclick="setAppTheme('light')" title="Warm Beige Theme">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+            </svg>
+          </button>
+          <button class="theme-switch-btn" id="btnDark" onclick="setAppTheme('dark')" title="Espresso Dark Theme">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Logout Button -->
+        <a href="/logout" class="nav-about-btn" style="color: #c62828; border-color: rgba(198,40,40,0.3);" title="Sign out of your account">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          <span>Logout</span>
+        </a>
+      </div>
+    </header>
+
+    <!-- Profile Main Container -->
+    <main class="profile-page-container">
+      
+      <!-- Feedback Alert Banner -->
+      <div id="profileAlert" class="auth-alert-box" style="display: none; margin-bottom: 20px;"></div>
+
+      <!-- User Hero Summary Card -->
+      <div class="profile-hero-card">
+        <div class="profile-hero-avatar">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </div>
+        <div class="profile-hero-info">
+          <div class="profile-hero-title-row">
+            <h2 id="heroUsername" class="profile-hero-name">{{ user.username }}</h2>
+            <span class="profile-role-badge">Verified Observer</span>
+          </div>
+          <p class="profile-hero-meta">
+            <span>✉️ {{ user.email }}</span>
+            <span class="meta-dot">&bull;</span>
+            <span>📱 +91 <strong id="heroMobile">{{ user.mobile }}</strong></span>
+            <span class="meta-dot">&bull;</span>
+            <span>📍 <strong id="heroLocality">{{ user.locality }}</strong></span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Profile Grid Sections -->
+      <div class="profile-grid">
+        
+        <!-- Section 1: Basic Information -->
+        <div class="profile-card">
+          <div class="profile-card-header">
+            <div class="profile-card-icon">✏️</div>
+            <div>
+              <h3 class="profile-card-title">Observer Details</h3>
+              <p class="profile-card-subtitle">Update your display name and primary monitoring locality in Karnataka</p>
+            </div>
+          </div>
+
+          <form id="detailsForm" onsubmit="handleDetailsSubmit(event)">
+            <div class="form-group">
+              <label for="profUsername" class="form-label">Full Name / Display Name</label>
+              <div class="form-input-wrap">
+                <input type="text" id="profUsername" class="form-input" value="{{ user.username }}" required minlength="2">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="profLocality" class="form-label">Karnataka Monitoring Locality / Taluk</label>
+              <div class="form-input-wrap">
+                <input type="text" id="profLocality" class="form-input" value="{{ user.locality }}" list="karnatakaPlacesList" required>
+              </div>
+              <span class="form-hint">Used as default focal radar region for instant convective warnings.</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Registered Email Address</label>
+              <div class="form-input-wrap">
+                <input type="email" class="form-input" value="{{ user.email }}" readonly disabled style="opacity: 0.75; cursor: not-allowed; background: var(--toggle-bg);">
+              </div>
+              <span class="form-hint">Email address is your permanent secure account ID.</span>
+            </div>
+
+            <button type="submit" id="btnSaveDetails" class="auth-submit-btn" style="margin-top: 10px;">
+              <span>💾 Save Observer Details</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- Section 2: Mobile Number & OTP Verification -->
+        <div class="profile-card">
+          <div class="profile-card-header">
+            <div class="profile-card-icon">📱</div>
+            <div>
+              <h3 class="profile-card-title">Emergency Alert Mobile</h3>
+              <p class="profile-card-subtitle">Change your mobile number with OTP verification for instant SMS storm alerts</p>
+            </div>
+          </div>
+
+          <div class="mobile-current-box">
+            <div class="mobile-status-row">
+              <span class="mobile-status-label">Current Mobile for SMS Alerts:</span>
+              <span class="mobile-status-val">+91 <span id="currentMobileDisplay">{{ user.mobile }}</span></span>
+            </div>
+            <p class="mobile-status-desc">Automated Free2SMS/Fast2SMS thunderstorm warning dispatches are sent to this number.</p>
+          </div>
+
+          <!-- Step 1: Request Mobile OTP -->
+          <form id="mobileOtpReqForm" onsubmit="handleMobileOtpRequest(event)">
+            <div class="form-group">
+              <label for="profNewMobile" class="form-label">New 10-Digit Mobile Number (+91)</label>
+              <div class="form-input-wrap">
+                <input type="tel" id="profNewMobile" class="form-input" placeholder="e.g. 9845012345" pattern="[0-9]{10}" maxlength="10" required>
+              </div>
+            </div>
+
+            <button type="submit" id="btnSendMobileOtp" class="auth-demo-btn" style="width: 100%; margin-bottom: 12px;">
+              <span>📨 Send OTP to Verify Mobile Number</span>
+            </button>
+          </form>
+
+          <!-- Step 2: Verify Mobile OTP (Appears when OTP is sent) -->
+          <form id="mobileOtpVerifyForm" style="display: none; padding-top: 8px; border-top: 1px dashed var(--card-border);" onsubmit="handleMobileOtpVerify(event)">
+            <div class="otp-instruction-pill">
+              <span>Enter the 6-digit verification code sent to your registered email & new mobile.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="profMobileOtp" class="form-label">6-Digit Verification Code (OTP)</label>
+              <div class="form-input-wrap">
+                <input type="text" id="profMobileOtp" class="form-input otp-digit-input" placeholder="• • • • • •" maxlength="6" pattern="[0-9]{6}" required autocomplete="one-time-code">
+              </div>
+            </div>
+
+            <div class="form-btn-row">
+              <button type="submit" id="btnConfirmMobileOtp" class="auth-submit-btn">
+                <span>✅ Verify & Update Mobile</span>
+              </button>
+              <button type="button" class="auth-cancel-btn" onclick="cancelMobileChange()">
+                <span>Cancel</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Section 3: Password & Security with Email OTP -->
+        <div class="profile-card">
+          <div class="profile-card-header">
+            <div class="profile-card-icon">🔒</div>
+            <div>
+              <h3 class="profile-card-title">Password & Security</h3>
+              <p class="profile-card-subtitle">Change your password with a 6-digit OTP delivered securely to your Gmail</p>
+            </div>
+          </div>
+
+          <div id="pwdStep1Box">
+            <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 16px;">
+              To change your password, click below. A secure 6-digit one-time code will be dispatched to <strong>{{ user.email }}</strong>.
+            </p>
+            <button type="button" id="btnSendPwdOtp" class="auth-demo-btn" onclick="handlePasswordOtpRequest()" style="width: 100%;">
+              <span>📧 Send Password Change OTP to My Email</span>
+            </button>
+          </div>
+
+          <!-- Password Reset Form (Appears when OTP is sent) -->
+          <form id="pwdVerifyForm" style="display: none; padding-top: 12px; border-top: 1px dashed var(--card-border);" onsubmit="handlePasswordOtpVerify(event)">
+            <div class="otp-instruction-pill">
+              <span>We sent a 6-digit code to <strong>{{ user.email }}</strong>. Enter it below with your new password.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="profPwdOtp" class="form-label">6-Digit Verification Code</label>
+              <div class="form-input-wrap">
+                <input type="text" id="profPwdOtp" class="form-input otp-digit-input" placeholder="• • • • • •" maxlength="6" pattern="[0-9]{6}" required autocomplete="one-time-code">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="profNewPwd" class="form-label">New Password (min 6 characters)</label>
+              <div class="form-input-wrap">
+                <input type="password" id="profNewPwd" class="form-input" placeholder="Enter new password" minlength="6" required autocomplete="new-password">
+                <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('profNewPwd', this)" title="Show/Hide">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="profConfirmPwd" class="form-label">Confirm New Password</label>
+              <div class="form-input-wrap">
+                <input type="password" id="profConfirmPwd" class="form-input" placeholder="Re-enter new password" minlength="6" required autocomplete="new-password">
+                <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('profConfirmPwd', this)" title="Show/Hide">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-btn-row">
+              <button type="submit" id="btnConfirmPwdChange" class="auth-submit-btn">
+                <span>🔐 Update Password</span>
+              </button>
+              <button type="button" class="auth-cancel-btn" onclick="cancelPasswordChange()">
+                <span>Cancel</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- Datalist of Karnataka Places for Locality Selection -->
+    <datalist id="karnatakaPlacesList">
+      <option value="Puttur, Dakshina Kannada">Puttur, Dakshina Kannada</option>
+      <option value="Bantwal, Dakshina Kannada">Bantwal, Dakshina Kannada</option>
+      <option value="Sullia, Dakshina Kannada">Sullia, Dakshina Kannada</option>
+      <option value="Belthangady, Dakshina Kannada">Belthangady, Dakshina Kannada</option>
+      <option value="Mangaluru, Dakshina Kannada">Mangaluru, Dakshina Kannada</option>
+      <option value="Moodbidri, Dakshina Kannada">Moodbidri, Dakshina Kannada</option>
+      <option value="Kadaba, Dakshina Kannada">Kadaba, Dakshina Kannada</option>
+      <option value="Udupi, Udupi">Udupi, Udupi</option>
+      <option value="Manipal, Udupi">Manipal, Udupi</option>
+      <option value="Kundapura, Udupi">Kundapura, Udupi</option>
+      <option value="Karkala, Udupi">Karkala, Udupi</option>
+      <option value="Madikeri, Kodagu">Madikeri, Kodagu</option>
+      <option value="Chikkamagaluru, Chikkamagaluru">Chikkamagaluru, Chikkamagaluru</option>
+      <option value="Bengaluru Urban, Bengaluru">Bengaluru Urban, Bengaluru</option>
+      <option value="Mysuru, Mysuru">Mysuru, Mysuru</option>
+      <option value="Shivamogga, Shivamogga">Shivamogga, Shivamogga</option>
+      <option value="Hassan, Hassan">Hassan, Hassan</option>
+      <option value="Sirsi, Uttara Kannada">Sirsi, Uttara Kannada</option>
+      <option value="Karwar, Uttara Kannada">Karwar, Uttara Kannada</option>
+      <option value="Hubballi, Dharwad">Hubballi, Dharwad</option>
+      <option value="Belagavi, Belagavi">Belagavi, Belagavi</option>
+    </datalist>
+
+  </div>
+
+  <script>
+    // Theme toggle
+    function setAppTheme(theme) {
+      document.body.setAttribute('data-theme', theme);
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('aerocast_theme', theme);
+      var btnLight = document.getElementById('btnLight');
+      var btnDark = document.getElementById('btnDark');
+      if (btnLight && btnDark) {
+        btnLight.classList.toggle('active', theme === 'light');
+        btnDark.classList.toggle('active', theme === 'dark');
+      }
+    }
+
+    function showFeedback(msg, type) {
+      var box = document.getElementById('profileAlert');
+      if (!box) return;
+      box.textContent = msg;
+      box.className = 'auth-alert-box ' + (type === 'error' ? 'auth-alert-error' : 'auth-alert-success');
+      box.style.display = 'block';
+      box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function togglePasswordVisibility(id, btn) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      if (el.type === 'password') {
+        el.type = 'text';
+        btn.style.color = 'var(--accent-terracotta)';
+      } else {
+        el.type = 'password';
+        btn.style.color = 'var(--text-muted)';
+      }
+    }
+
+    // 1. Basic Details Submit
+    async function handleDetailsSubmit(e) {
+      e.preventDefault();
+      var username = document.getElementById('profUsername').value.trim();
+      var locality = document.getElementById('profLocality').value.trim();
+      var btn = document.getElementById('btnSaveDetails');
+
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳ Saving Details...</span>';
+
+      try {
+        var res = await fetch('/api/profile/update-details', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: username, locality: locality })
+        });
+        var data = await res.json();
+        if (data.success) {
+          showFeedback('Profile details updated successfully!', 'success');
+          document.getElementById('heroUsername').textContent = username;
+          document.getElementById('heroLocality').textContent = locality;
+        } else {
+          showFeedback(data.error || 'Failed to update profile.', 'error');
+        }
+      } catch (err) {
+        showFeedback('Network error: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>💾 Save Observer Details</span>';
+      }
+    }
+
+    // 2. Mobile OTP Flow
+    var pendingNewMobile = '';
+
+    async function handleMobileOtpRequest(e) {
+      e.preventDefault();
+      var newMobile = document.getElementById('profNewMobile').value.trim();
+      var btn = document.getElementById('btnSendMobileOtp');
+
+      if (!/^\d{10}$/.test(newMobile)) {
+        showFeedback('Please enter a valid 10-digit mobile number.', 'error');
+        return;
+      }
+
+      pendingNewMobile = newMobile;
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳ Dispatching OTP...</span>';
+
+      try {
+        var res = await fetch('/api/profile/send-mobile-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ new_mobile: newMobile })
+        });
+        var data = await res.json();
+        if (data.success) {
+          showFeedback(data.message, 'success');
+          document.getElementById('mobileOtpVerifyForm').style.display = 'block';
+          document.getElementById('profMobileOtp').focus();
+        } else {
+          showFeedback(data.error || 'Failed to send verification code.', 'error');
+        }
+      } catch (err) {
+        showFeedback('Network error: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>📨 Send OTP to Verify Mobile Number</span>';
+      }
+    }
+
+    async function handleMobileOtpVerify(e) {
+      e.preventDefault();
+      var otp = document.getElementById('profMobileOtp').value.trim();
+      var btn = document.getElementById('btnConfirmMobileOtp');
+
+      if (otp.length !== 6) {
+        showFeedback('Please enter the complete 6-digit OTP code.', 'error');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳ Verifying OTP...</span>';
+
+      try {
+        var res = await fetch('/api/profile/verify-mobile-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ new_mobile: pendingNewMobile, otp: otp })
+        });
+        var data = await res.json();
+        if (data.success) {
+          showFeedback(data.message, 'success');
+          document.getElementById('heroMobile').textContent = data.mobile;
+          document.getElementById('currentMobileDisplay').textContent = data.mobile;
+          document.getElementById('mobileOtpVerifyForm').style.display = 'none';
+          document.getElementById('profNewMobile').value = '';
+          document.getElementById('profMobileOtp').value = '';
+        } else {
+          showFeedback(data.error || 'Invalid OTP code.', 'error');
+        }
+      } catch (err) {
+        showFeedback('Network error: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>✅ Verify & Update Mobile</span>';
+      }
+    }
+
+    function cancelMobileChange() {
+      document.getElementById('mobileOtpVerifyForm').style.display = 'none';
+      document.getElementById('profMobileOtp').value = '';
+    }
+
+    // 3. Password OTP Flow
+    async function handlePasswordOtpRequest() {
+      var btn = document.getElementById('btnSendPwdOtp');
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳ Dispatching Code to Your Email...</span>';
+
+      try {
+        var res = await fetch('/api/profile/send-password-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        var data = await res.json();
+        if (data.success) {
+          showFeedback(data.message, 'success');
+          document.getElementById('pwdVerifyForm').style.display = 'block';
+          document.getElementById('profPwdOtp').focus();
+        } else {
+          showFeedback(data.error || 'Failed to dispatch password OTP.', 'error');
+        }
+      } catch (err) {
+        showFeedback('Network error: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>📧 Send Password Change OTP to My Email</span>';
+      }
+    }
+
+    async function handlePasswordOtpVerify(e) {
+      e.preventDefault();
+      var otp = document.getElementById('profPwdOtp').value.trim();
+      var newPwd = document.getElementById('profNewPwd').value;
+      var confPwd = document.getElementById('profConfirmPwd').value;
+      var btn = document.getElementById('btnConfirmPwdChange');
+
+      if (otp.length !== 6) {
+        showFeedback('Please enter the 6-digit OTP code sent to your email.', 'error');
+        return;
+      }
+      if (newPwd.length < 6) {
+        showFeedback('New password must be at least 6 characters long.', 'error');
+        return;
+      }
+      if (newPwd !== confPwd) {
+        showFeedback('Passwords do not match. Please re-enter carefully.', 'error');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳ Updating Password...</span>';
+
+      try {
+        var res = await fetch('/api/profile/verify-password-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ otp: otp, new_password: newPwd, confirm_password: confPwd })
+        });
+        var data = await res.json();
+        if (data.success) {
+          showFeedback('Your password has been changed successfully!', 'success');
+          document.getElementById('pwdVerifyForm').style.display = 'none';
+          document.getElementById('profPwdOtp').value = '';
+          document.getElementById('profNewPwd').value = '';
+          document.getElementById('profConfirmPwd').value = '';
+        } else {
+          showFeedback(data.error || 'Password update failed.', 'error');
+        }
+      } catch (err) {
+        showFeedback('Network error: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>🔐 Update Password</span>';
+      }
+    }
+
+    function cancelPasswordChange() {
+      document.getElementById('pwdVerifyForm').style.display = 'none';
+      document.getElementById('profPwdOtp').value = '';
+      document.getElementById('profNewPwd').value = '';
+      document.getElementById('profConfirmPwd').value = '';
+    }
+  </script>
+  <!-- Real-time Thunderstorm Alert Broadcast Listener for All Users -->
+  <script src="/static/js/alerts_listener.js?v=loc_target_v26"></script>
+</body>
+</html>
+
